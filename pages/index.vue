@@ -9,84 +9,50 @@
       sm8
       md6
     >
-      <div class="text-center">
-        <logo />
-        <vuetify-logo />
-      </div>
+
+      <!-- TODO remove later-->
+      <v-alert color="primary" outlined>
+        <div class="headline text-center">TODO</div>
+        <ol>
+          <li>Страница "создать" для ресторанов (которые будут переработаны - см пункт 4)</li>
+          <li class="text--secondary"><s>Асинхронная загрузка данных в <code style="text-decoration: line-through;">v-data-table</code></s></li>
+          <li class="text--secondary"><s>Работа <code style="text-decoration: line-through;">v-data-table</code> с бэкэндом</s></li>
+          <li class="text--secondary"><s>Сделать текущие роуты <code style="text-decoration: line-through;">/restaurant</code> универсальными, вынести всё из <code style="text-decoration: line-through;">resource-data.js</code> в общий глобальный файл со "схемой" ресурсов и доработать "универсальые" страницы для работы с глобальным файлом-"схемой"</s></li>
+          <li>Удалить этот список и не забыть поискать всякие <code>todo</code> комментарии</li>
+          <li>Может сделать размытую картинку на фоне формы авторизации...</li>
+          <li class="text--secondary"><s><code style="text-decoration: line-through;">absolute</code> для футера</s></li>
+          <li>Больше доступных типов полей на страницах создать/редактировать</li>
+        </ol>
+      </v-alert>
+
       <v-card>
         <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
+          Добро пожаловать в приложение для администрирования и управления Food Service
         </v-card-title>
         <v-card-text>
-          <p>Vuetify is a progressive Material Design component framework for Vue.js. It was designed to empower developers to create amazing applications.</p>
-          <p>
-            For more information on Vuetify, check out the <a
-              href="https://vuetifyjs.com"
-              target="_blank"
-            >
-              documentation
-            </a>.
-          </p>
-          <p>
-            If you have questions, please join the official <a
-              href="https://chat.vuetifyjs.com/"
-              target="_blank"
-              title="chat"
-            >
-              discord
-            </a>.
-          </p>
-          <p>
-            Find a bug? Report it on the github <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              title="contribute"
-            >
-              issue board
-            </a>.
-          </p>
-          <p>Thank you for developing with Vuetify and I look forward to bringing more exciting features in the future.</p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
+          <p>Все доступные разделы можно увидеть в левом меню. Чтобы открыть меню нажмите на кнопку <v-icon>mdi-menu</v-icon> в верхнем левом углу.</p>
+          <div>
+            <span>Разработчик сайта: </span> <span class="font-weight-medium">Андрей Семенцов</span>
+            <div class="d-inline-block">
+              <a target="_blank" href="https://github.com/reenekt" style="text-decoration: none;"><v-icon class="text--primary">mdi-github</v-icon></a>
+              <a target="_blank" href="https://vk.com/reenekt" style="text-decoration: none;"><v-icon style="color: #0D47A1 !important;">mdi-vk</v-icon></a>
+            </div>
           </div>
-          <hr class="my-3">
-          <a
-            href="https://nuxtjs.org/"
-            target="_blank"
-          >
-            Nuxt Documentation
-          </a>
-          <br>
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-          >
-            Nuxt GitHub
-          </a>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            nuxt
-            to="/inspire"
-          >
-            Continue
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
 
 export default {
   components: {
-    Logo,
-    VuetifyLogo
+  },
+  head () {
+    return {
+      title: 'Главная'
+    }
   }
 }
 </script>

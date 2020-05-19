@@ -1,4 +1,5 @@
 import colors from 'vuetify/es5/util/colors'
+require('dotenv').config() // load env for true app configuration (axios and other) FIXME https://github.com/nuxt-community/axios-module/issues/171#issuecomment-542261530
 
 export default {
   mode: 'universal',
@@ -6,8 +7,14 @@ export default {
   ** Headers of the page
   */
   head: {
-    titleTemplate: '%s - ' + process.env.npm_package_name,
-    title: process.env.npm_package_name || '',
+    htmlAttrs: {
+      lang: 'ru'
+    },
+    titleTemplate: (titleChunk) => {
+      // If undefined or blank then we don't need the hyphen
+      return titleChunk ? `${titleChunk} – ${process.env.APP_NAME}` : process.env.APP_NAME
+    },
+    title: process.env.APP_NAME || '',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -20,16 +27,19 @@ export default {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#fff' },
+  loading: { color: colors.blue.darken2 },
   /*
   ** Global CSS
   */
   css: [
+    '~/assets/page-transition.css'
   ],
   /*
   ** Plugins to load before mounting the App
   */
   plugins: [
+    { src: '~plugins/vuelidate', ssr: false },
+    { src: '~plugins/data-schema' }
   ],
   /*
   ** Nuxt.js dev-modules
@@ -47,7 +57,9 @@ export default {
     '@nuxtjs/axios',
     '@nuxtjs/pwa',
     // Doc: https://github.com/nuxt-community/dotenv-module
-    '@nuxtjs/dotenv'
+    '@nuxtjs/dotenv',
+    // Doc: https://auth.nuxtjs.org/
+    '@nuxtjs/auth'
   ],
   /*
   ** Axios module configuration
@@ -56,25 +68,33 @@ export default {
   axios: {
   },
   /*
+  ** Auth module configuration
+  ** See https://auth.nuxtjs.org/api/options.html
+  */
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: '/auth/login', method: 'post', propertyName: 'access_token' },
+          logout: { url: '/auth/logout', method: 'post' },
+          user: { url: '/auth/me', method: 'get', propertyName: 'user' }
+        }
+        // tokenRequired: true,
+        // tokenType: 'bearer'
+        // autoFetchUser: true
+      }
+    }
+  },
+
+  router: {
+    middleware: ['auth']
+  },
+  /*
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module
   */
   vuetify: {
-    customVariables: ['~/assets/variables.scss'],
-    theme: {
-      dark: true,
-      themes: {
-        dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          warning: colors.amber.base,
-          error: colors.deepOrange.accent4,
-          success: colors.green.accent3
-        }
-      }
-    }
+    optionsPath: './vuetify.options.js'
   },
   /*
   ** Build configuration
