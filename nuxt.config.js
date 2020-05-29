@@ -59,7 +59,8 @@ export default {
     // Doc: https://github.com/nuxt-community/dotenv-module
     '@nuxtjs/dotenv',
     // Doc: https://auth.nuxtjs.org/
-    '@nuxtjs/auth'
+    // '@nuxtjs/auth'
+    '@nuxtjs/auth-next'
   ],
   /*
   ** Axios module configuration
@@ -73,15 +74,24 @@ export default {
   */
   auth: {
     strategies: {
-      local: {
+      laravelPassportPasswordGrant: {
+        name: 'laravelPassportPassword',
+        provider: 'laravel/passport',
+        url: process.env.AUTH_BASE_URL || 'http://food-service.local',
         endpoints: {
-          login: { url: '/auth/login', method: 'post', propertyName: 'access_token' },
-          logout: { url: '/auth/logout', method: 'post' },
-          user: { url: '/auth/me', method: 'get', propertyName: 'user' }
-        }
-        // tokenRequired: true,
-        // tokenType: 'bearer'
-        // autoFetchUser: true
+          user: {
+            url: process.env.AUTH_USER_ENDPOINT || '/api/auth/user'
+          }
+        },
+        token: {
+          maxAge: 1800
+        },
+        refreshToken: {
+          maxAge: 60 * 60 * 24 * 30
+        },
+        clientId: process.env.AUTH_PASSPORT_CLIENT_ID,
+        clientSecret: process.env.AUTH_PASSPORT_CLIENT_SECRET,
+        grantType: 'password'
       }
     }
   },

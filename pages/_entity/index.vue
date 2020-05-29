@@ -1,5 +1,22 @@
 <template>
   <v-container>
+
+    <v-snackbar
+      v-model="snackbar.active"
+      top
+      multi-line
+      :color="snackbar.color"
+    >
+      {{ snackbar.text }}
+      <v-btn
+        dark
+        text
+        @click="snackbar.active = false"
+      >
+        Закрыть
+      </v-btn>
+    </v-snackbar>
+
     <v-row>
       <v-col :cols="12">
         <v-btn
@@ -27,6 +44,16 @@
           class="elevation-4"
           @update:page="changePage"
         >
+          <template v-for="(thrVal, thrKey, thrIndex) in tableHeadersRelations" v-slot:[thrKey]="{ item, header }">
+            <!-- eslint-disable -->
+            <v-btn v-if="lodashGet(item, thrVal.key)" text small
+                   :to="{ name: 'entity-id', params: { entity: thrVal.entity, id: lodashGet(item, thrVal.key) } }"
+                   nuxt exact target="_blank"
+            >{{ lodashGet(item, header.value) }} <v-icon x-small right>mdi-open-in-new</v-icon></v-btn>
+            <div v-if="!lodashGet(item, thrVal.key)">&mdash;</div>
+            <!-- eslint-enable -->
+          </template>
+
           <template #item.actions="{ item }">
             <!-- Desktop -->
             <v-flex v-if="$vuetify.breakpoint.mdAndUp">
@@ -37,7 +64,7 @@
                 <v-icon>mdi-square-edit-outline</v-icon>
               </v-btn>
               <!-- todo this -->
-              <v-btn color="error" small :to="{ name: 'entity-id', params: { id: item.id } }" nuxt>
+              <v-btn color="error" small @click="deleteEntity(item.id)">
                 <v-icon>mdi-delete-outline</v-icon>
               </v-btn>
             </v-flex>
@@ -76,8 +103,7 @@
                 <!-- TODO below -->
                 <v-list-item
                   color="error"
-                  :to="{}"
-                  nuxt
+                  @click="deleteEntity(item.id)"
                 >
                   <v-list-item-title>
                     <v-icon>mdi-delete-outline</v-icon>
@@ -93,6 +119,8 @@
 </template>
 
 <script>
+const lodashGet = require('lodash.get')
+
 export default {
   async asyncData ({ app, error, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
@@ -104,18 +132,26 @@ export default {
       title: resourceData.titles.entities,
       apiEndpoint: resourceData.apiPath,
       entityName: params.entity,
-      headers: resourceData.headers
+      headers: resourceData.headers,
+      resourceData
     }
   },
   data () {
     return {
       tableHeaders: [],
+      tableHeadersRelations: {},
       loading: true,
+      currentPage: 1,
       entities: {
         data: [],
         meta: {
           total: 0
         }
+      },
+      snackbar: {
+        active: false,
+        color: 'info',
+        text: ''
       }
     }
   },
@@ -132,7 +168,23 @@ export default {
       if (!actionFieldExists) {
         headers.push({ text: 'Действия', value: 'actions' })
       }
-      this.tableHeaders = headers
+
+      // headers.filter((header) => {
+      //   return header.type !== 'image'
+      // })
+      // TODO show multiple relations' items in modal (that opens by clicking on todo: "button in cell")
+      const tableHeaders = headers.filter(header => header.type !== 'image' && !(header.type === 'relation' && header.multiple === true))
+
+      const tableHeadersRelationsTemp = tableHeaders.filter(header => header.type === 'relation' && !!header.relation)
+      for (const key in tableHeadersRelationsTemp) {
+        // TODO show multiple relations' items in modal (that opens by clicking on todo: "button in cell")
+        console.log(tableHeadersRelationsTemp[key].text, tableHeadersRelationsTemp[key].multiple)
+        if (tableHeadersRelationsTemp[key].multiple !== true) {
+          this.tableHeadersRelations[`item.${tableHeadersRelationsTemp[key].value}`] = tableHeadersRelationsTemp[key].relation
+        }
+      }
+
+      this.tableHeaders = tableHeaders
     },
     changePage (page) {
       // console.log('PAGE: ' + page) // todo remove
@@ -149,9 +201,32 @@ export default {
           console.log(error.response)
         })
         .finally(() => {
+          this.currentPage = page
           this.loading = false
         })
-    }
+    },
+
+    deleteEntity (id) {
+      this.$axios.delete(this.resourceData.getResourceEndpoint(id))
+        .then((response) => {
+          // console.log(response.data) todo
+          this.snackbar.color = 'success'
+          this.snackbar.active = true
+          this.snackbar.text = response.data.message
+
+          // refresh page data
+          this.loadPageData(this.currentPage)
+        })
+        .catch((error) => {
+          // console.log(error.response.data) todo
+          this.snackbar.color = 'error'
+          this.snackbar.active = true
+          this.snackbar.text = error.response.data.message
+        })
+    },
+
+    // https://lodash.com/docs/4.17.15#get
+    lodashGet
   },
   head () {
     return {

@@ -12,6 +12,16 @@
         >
           Назад
         </v-btn>
+        <v-btn
+          class="my-2"
+          color="secondary"
+          outlined
+          :to="{name: 'entity-id-edit', params: { 'entity': entityName, id: entity.id }}"
+          nuxt
+          exact
+        >
+          Редактировать
+        </v-btn>
         <v-card>
           <v-card-text>
             <v-simple-table>
@@ -24,7 +34,40 @@
               <tbody>
                 <tr v-for="(field, i) in fields" :key="`field-${i}`">
                   <td>{{ field.text }}</td>
-                  <td>{{ entity[field.value] }}</td>
+                  <td v-if="field.type === 'text' || field.type === undefined">{{ entity[field.value] }}</td>
+                  <td v-if="field.type === 'relation' && field.multiple !== true">
+                    <!-- eslint-disable -->
+                    <v-btn v-if="lodashGet(entity, field.value)" text small
+                           :to="{ name: 'entity-id', params: { entity: field.relation.entity, id: lodashGet(entity, field.relation.key) } }"
+                           nuxt exact target="_blank"
+                    >{{ lodashGet(entity, field.value) }} <v-icon x-small right>mdi-open-in-new</v-icon></v-btn>
+                    <div v-if="!lodashGet(entity, field.value)">&mdash;</div>
+                    <!-- eslint-enable -->
+                  </td>
+                  <td v-if="field.type === 'relation' && field.multiple === true">
+                    <!-- eslint-disable -->
+                    <template v-if="entity[field.value] && entity[field.value].length > 0">
+                      <template v-for="(relItem) in entity[field.value]">
+                        <v-btn text small
+                               :to="{ name: 'entity-id', params: { entity: field.relation.entity, id: relItem[field.relation.valueKey || 'id'] } }"
+                               nuxt exact target="_blank"
+                        >{{ relItem[field.relation.textKey || 'name'] }} <v-icon x-small right>mdi-open-in-new</v-icon></v-btn>
+                      </template>
+                    </template>
+                    <div v-if="!entity[field.value] || entity[field.value].length === 0">&mdash;</div>
+                    <!-- eslint-enable -->
+                  </td>
+                  <td v-if="field.type === 'image'">
+<!--                    <img :src="entity[field.value]" :alt="field.text">-->
+                    <v-img
+                      eager
+                      contain
+                      :src="entity[field.value]"
+                      :alt="field.text"
+                      :max-height="300"
+                      :max-width="350"
+                    ></v-img>
+                  </td>
                 </tr>
               </tbody>
             </v-simple-table>
@@ -36,6 +79,8 @@
 </template>
 
 <script>
+const lodashGet = require('lodash.get')
+
 export default {
   async asyncData ({ app, error, $axios, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
@@ -56,6 +101,9 @@ export default {
     return {
       // fields: headers
     }
+  },
+  methods: {
+    lodashGet
   },
   head () {
     return {

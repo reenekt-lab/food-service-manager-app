@@ -33,14 +33,14 @@
         <v-card>
           <v-card-title>Редактирование "{{ entity ? (entity.name ? entity.name : `${entityName} ${entity.id}`) : (entityName ? entityName : 'ресурса') }}"</v-card-title>
           <v-card-text>
-            <!-- TODO оценить необходимость генерации форм через схемы (будут ли другие типы полей кроме простых инпутов) -->
-            <!-- TODO подумать - может вынести валидацию в схему resource-data.js -->
             <!-- TODO модификаторы вроде outlined для всех полей в форме (пример - https://vuetifyjs.com/en/components/textarea/#textareas) -->
             <form>
               <!-- todo ADD v-for AND vuelidate validation (see https://vuetifyjs.com/en/components/forms/#vuelidate)-->
               <template v-for="(field, key, index) in editableFields">
+
+                <!-- TODO add new field types (maybe slider with input for decimal types) -->
                 <v-text-field
-                  v-if="field.fieldType === 'input'"
+                  v-if="field.fieldType === 'input' || field.fieldType === 'decimal'"
                   :key="`field_${index}`"
                   v-model="entity[key]"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
@@ -49,6 +49,33 @@
                   :required="!!field.fieldParams.required"
                   @input="$v.entity[key].$touch()"
                   @blur="$v.entity[key].$touch()"
+                ></v-text-field>
+
+                <v-text-field
+                  v-if="field.fieldType === 'password'"
+                  :key="`field_${index}`"
+                  v-model="entity[key]"
+                  :error="$v.entity[key].$dirty && $v.entity[key].$error"
+                  :counter="0"
+                  :label="field.label"
+                  :required="!!field.fieldParams.required"
+                  :type="field.fieldParams.type || 'password'"
+                  autocomplete="new-password"
+                  @input="$v.entity[key].$touch()"
+                  @blur="$v.entity[key].$touch()"
+                ></v-text-field>
+                <v-text-field
+                  v-if="field.fieldType === 'password' && field.confirmed === true"
+                  :key="`field_${index}_confirmation`"
+                  v-model="entity[`${key}${field.confirmationSuffix || '_confirmation'}`]"
+                  :error="$v.entity[`${key}${field.confirmationSuffix || '_confirmation'}`].$dirty && $v.entity[`${key}${field.confirmationSuffix || '_confirmation'}`].$error"
+                  :counter="0"
+                  :label="`${field.label} ${field.confirmationSuffixLabel || '(повтор)'}`"
+                  :required="!!field.fieldParams.required"
+                  :type="field.fieldParams.type || 'password'"
+                  autocomplete="new-password"
+                  @input="$v.entity[`${key}${field.confirmationSuffix || '_confirmation'}`].$touch()"
+                  @blur="$v.entity[`${key}${field.confirmationSuffix || '_confirmation'}`].$touch()"
                 ></v-text-field>
 
                 <v-textarea
@@ -70,6 +97,21 @@
                   :label="field.label"
                   :preview-height="250"
                 ></v-image-preview-input>
+
+                <v-select
+                  v-if="field.fieldType === 'relation'"
+                  :key="`field_${index}`"
+                  v-model="entity[key]"
+                  :multiple="field.multiple || false"
+                  :chips="field.chips || (field.multiple ? true : false)"
+                  :error="$v.entity[key].$dirty && $v.entity[key].$error"
+                  :label="field.label"
+                  :items="relatedResourcesData[field.relation.entity].data"
+                  :loading="relatedResourcesData[field.relation.entity].loading"
+                  :item-text="field.relation.textKey"
+                  :item-value="field.relation.valueKey"
+                  clearable
+                ></v-select>
               </template>
 
               <v-btn color="primary" class="mr-4" :loading="loading" @click="submit">
@@ -88,10 +130,10 @@ import { validationMixin } from 'vuelidate'
 import VImagePreviewInput from '../../../components/VImagePreviewInput'
 
 export default {
-  mixins: [validationMixin],
   components: {
     VImagePreviewInput
   },
+  mixins: [validationMixin],
 
   async asyncData ({ app, error, $axios, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
@@ -101,12 +143,24 @@ export default {
     }
     const apiEndpoint = resourceData.getResourceEndpoint(params.id)
     const data = await $axios.$get(apiEndpoint)
+    const entity = data.data
+    const keys = Object.keys(resourceData.editableFields)
+    for (const key of keys) {
+      if (resourceData.editableFields[key].confirmed === true) {
+        const fieldKeyName = `${key}${resourceData.editableFields[key].confirmationSuffix || '_confirmation'}`
+        entity[fieldKeyName] = undefined
+      }
+    }
+
+    const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
+
     return {
       entityName: params.entity,
       apiEndpoint,
-      entity: data.data,
+      entity,
       editableFields: resourceData.editableFields,
-      validations: resourceData.validations
+      validations: resourceData.validations,
+      relatedResources
     }
   },
   data () {
@@ -118,14 +172,28 @@ export default {
         text: ''
       },
 
-      imagesPreviews: {} // todo q
+      imagesPreviews: {}, // todo q
+
+      relatedResourcesData: {}
     }
+  },
+  created () {
+    this.loadRelatedResourcesData()
   },
   // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
   validations () {
+    let validationRules = {}
+    if (typeof this.validations === 'function') {
+      const validationContext = {
+        pageType: 'edit'
+      }
+      validationRules = this.validations(validationContext)
+    } else {
+      validationRules = this.validations
+    }
     return {
       entity: {
-        ...this.validations
+        ...validationRules // fixme
       }
     }
   },
@@ -146,6 +214,10 @@ export default {
         // eslint-disable-next-line no-prototype-builtins
         if (this.editableFields.hasOwnProperty(key) && this.entity.hasOwnProperty(key)) {
           data[key] = this.entity[key]
+          if (this.editableFields[key].confirmed === true) {
+            const fieldKeyName = `${key}${this.editableFields[key].confirmationSuffix || '_confirmation'}`
+            data[fieldKeyName] = this.entity[fieldKeyName]
+          }
         }
       }
 
@@ -158,9 +230,36 @@ export default {
       for (let key in this.editableFields) {
         // eslint-disable-next-line no-prototype-builtins
         if (this.editableFields.hasOwnProperty(key) && this.entity.hasOwnProperty(key)) {
-          data.append(key, this.entity[key])
+          if (Array.isArray(this.entity[key])) {
+            // TODO FIXME: при загрузке с backend'а мы получаем массив сущностей вместо массива идентификаторов
+            // https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript/8511350#8511350
+            if (typeof this.entity[key][0] === 'object' && this.entity[key][0] !== null) {
+              continue
+            }
+
+            for (let i = 0; i < this.entity[key].length; i++) {
+              data.append(`${key}[${i}]`, this.entity[key][i])
+            }
+            continue
+          }
+
+          // fixes null values for "formdata -> laravel backend"
+          if (this.entity[key] === undefined) {
+            data.append(key, '')
+            continue
+          }
+          // data.append(key, this.entity[key])
+          if (this.entity[key] !== null) {
+            data.append(key, this.entity[key])
+          }
+          if (this.editableFields[key].confirmed === true) {
+            const fieldKeyName = `${key}${this.editableFields[key].confirmationSuffix || '_confirmation'}`
+            data.append(fieldKeyName, this.entity[fieldKeyName])
+          }
         }
       }
+
+      data.append('_method', 'PUT') // for Laravel's backend
 
       return data
     }
@@ -170,7 +269,8 @@ export default {
       this.$v.$touch()
       if (!this.$v.$anyError) {
         this.loading = true
-        this.$axios.put(this.apiEndpoint, this.formDataForSaving, {
+        // this.$axios.put
+        this.$axios.post(this.apiEndpoint, this.formDataForSaving, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -189,6 +289,30 @@ export default {
           })
           .finally(() => {
             this.loading = false
+          })
+      }
+    },
+    loadRelatedResourcesData () {
+      for (const key in this.relatedResources) {
+        if (!this.relatedResourcesData[key]) {
+          const relatedResourcesDataTemp = this.relatedResourcesData
+          relatedResourcesDataTemp[key] = {
+            loading: true,
+            data: []
+          }
+          this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
+        }
+
+        this.$axios.get(this.relatedResources[key].apiPath)
+          .then((response) => {
+            console.log(response)
+            const relatedResourcesDataTemp = this.relatedResourcesData
+            relatedResourcesDataTemp[key].loading = false
+            relatedResourcesDataTemp[key].data = response.data.data
+            this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
+          })
+          .catch((error) => {
+            console.log(error.response)
           })
       }
     }

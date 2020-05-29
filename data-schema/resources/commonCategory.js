@@ -1,24 +1,22 @@
 import { required } from 'vuelidate/lib/validators'
 
-const restaurant = {
+const commonCategory = {
   // todo add icon
   // drawerMenu: {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
   titles: {
-    entity: 'Ресторан',
-    entities: 'Рестораны'
+    entity: 'Общая категория ресторана',
+    entities: 'Общие категории ресторана'
   },
-  apiPath: '/restaurants',
+  apiPath: '/common-category',
   getResourceEndpoint (id) {
     return `${this.apiPath}/${id}`
   },
   headers: [
     { text: 'ID', value: 'id' },
     { text: 'Название', value: 'name' },
-    { text: 'Описание', value: 'description' },
-    { text: 'Адрес', value: 'address' },
     { text: 'Добавлен', value: 'created_at' },
     { text: 'Изменен', value: 'updated_at' },
     { text: 'Главное изображение', value: 'main_image', type: 'image' }
@@ -26,21 +24,6 @@ const restaurant = {
   editableFields: {
     name: {
       label: 'Название',
-      fieldType: 'input',
-      fieldParams: {
-        required: true,
-        type: 'text'
-      }
-    },
-    description: {
-      label: 'Описание',
-      fieldType: 'textarea',
-      fieldParams: {
-        required: false
-      }
-    },
-    address: {
-      label: 'Адрес',
       fieldType: 'input',
       fieldParams: {
         required: true,
@@ -56,14 +39,8 @@ const restaurant = {
   validations: {
     name: {
       required
-    },
-    description: {
-
-    },
-    address: {
-      required
     }
   }
 }
 
-export default restaurant
+export default commonCategory

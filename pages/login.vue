@@ -61,15 +61,15 @@ export default {
     async sendLoginRequest () {
       this.loading = true
       try {
-        await this.$auth.loginWith('local', {
+        await this.$auth.loginWith('laravelPassportPassword', {
           data: {
-            email: this.email,
+            username: this.email,
             password: this.password
           }
         })
         await this.$router.push('/')
       } catch (err) {
-        // console.log(err) // todo
+        console.log(err) // todo
         this.error = true
       } finally {
         this.loading = false

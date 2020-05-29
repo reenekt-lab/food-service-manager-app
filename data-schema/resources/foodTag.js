@@ -1,16 +1,16 @@
 import { required } from 'vuelidate/lib/validators'
 
-const restaurant = {
+const foodTag = {
   // todo add icon
   // drawerMenu: {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
   titles: {
-    entity: 'Ресторан',
-    entities: 'Рестораны'
+    entity: 'Тег еды / напитка',
+    entities: 'Теги еды / напитков'
   },
-  apiPath: '/restaurants',
+  apiPath: '/tags',
   getResourceEndpoint (id) {
     return `${this.apiPath}/${id}`
   },
@@ -18,10 +18,9 @@ const restaurant = {
     { text: 'ID', value: 'id' },
     { text: 'Название', value: 'name' },
     { text: 'Описание', value: 'description' },
-    { text: 'Адрес', value: 'address' },
     { text: 'Добавлен', value: 'created_at' },
-    { text: 'Изменен', value: 'updated_at' },
-    { text: 'Главное изображение', value: 'main_image', type: 'image' }
+    { text: 'Изменен', value: 'updated_at' }
+    // { text: 'Главное изображение', value: 'main_image', type: 'image' }
   ],
   editableFields: {
     name: {
@@ -38,20 +37,12 @@ const restaurant = {
       fieldParams: {
         required: false
       }
-    },
-    address: {
-      label: 'Адрес',
-      fieldType: 'input',
-      fieldParams: {
-        required: true,
-        type: 'text'
-      }
-    },
-    main_image: {
-      label: 'Главное изображение',
-      fieldType: 'image',
-      fieldParams: {}
     }
+    // main_image: {
+    //   label: 'Главное изображение',
+    //   fieldType: 'image',
+    //   fieldParams: {}
+    // }
   },
   validations: {
     name: {
@@ -59,11 +50,8 @@ const restaurant = {
     },
     description: {
 
-    },
-    address: {
-      required
     }
   }
 }
 
-export default restaurant
+export default foodTag

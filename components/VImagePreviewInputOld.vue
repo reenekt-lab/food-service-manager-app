@@ -1,43 +1,33 @@
 <template>
-  <div>
-    <v-file-input
-      v-if="mode === 'edit'"
-      v-model="image"
-      show-size
-      :counter="changed === true"
-      :accept="accept"
-      :label="label"
-      :prepend-icon="prependIcon"
-      full-width
-      class="preview-image"
-      :loading="loading"
-      @change="onChanged"
-    >
-      <template v-slot:selection="{ file }">
-        <v-img
-          eager
-          contain
-          :src="(changed === false && url) ? url : generateBlobUrl(file)"
-          :height="previewHeight"
-          :max-height="previewMaxHeight"
-          @load="revokeBlobUrlDelayed"
-        ></v-img>
-      </template>
-    </v-file-input>
-    <v-img
-      v-if="mode === 'preview'"
-      eager
-      contain
-      title="Кликните чтобы изменить изображение"
-      :src="url"
-      :height="previewHeight"
-      :max-height="previewMaxHeight"
-      @click="() => { mode = 'edit' }"
-    ></v-img>
-  </div>
+  <v-file-input
+    v-model="image"
+    show-size
+    :counter="changed === true"
+    :accept="accept"
+    :label="label"
+    :prepend-icon="prependIcon"
+    full-width
+    class="preview-image"
+    :loading="loading"
+    @change="onChanged"
+  >
+    <template v-slot:selection="{ file }">
+      <v-img
+        eager
+        contain
+        :src="(changed === false && url) ? url : generateBlobUrl(file)"
+        :height="previewHeight"
+        :max-height="previewMaxHeight"
+        @load="revokeBlobUrlDelayed"
+      ></v-img>
+    </template>
+  </v-file-input>
 </template>
 
 <script>
+
+// TODO IMPROVE THIS
+
 export default {
   name: 'VImagePreviewInput',
   model: {
@@ -80,8 +70,7 @@ export default {
       url: null, // url of previous image
       changed: false,
       loading: false,
-      image: null,
-      mode: 'edit' // edit | preview
+      image: null
     }
   },
   watch: {
@@ -89,7 +78,7 @@ export default {
       this.$emit('change', val)
     }
   },
-  created () {
+  async created () {
     if (typeof this.value !== 'string') {
       this.image = this.value
     } else {
@@ -101,9 +90,7 @@ export default {
       //   })
 
       // async variant of created()
-      // this.image = await this.loadImageFromUrl(this.value)
-
-      this.mode = 'preview'
+      this.image = await this.loadImageFromUrl(this.value)
 
       this.url = this.value
     }

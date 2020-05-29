@@ -7,6 +7,19 @@
       fixed
       app
     >
+      <v-list-item>
+        <v-list-item-content>
+          <v-list-item-title class="title">
+            {{ title }}
+          </v-list-item-title>
+          <v-list-item-subtitle>
+            Menu
+          </v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
+
+      <v-divider></v-divider>
+
       <v-list>
         <v-list-item
           v-for="(item, i) in items"
@@ -65,7 +78,6 @@
         <v-list>
           <v-list-item
             class="hidden-md-and-up"
-            @click="logout"
           >
             <v-list-item-content>
               <v-list-item-title>{{ $auth.user.first_name }}</v-list-item-title>
@@ -130,7 +142,7 @@ export default {
   data () {
     return {
       clipped: false,
-      drawer: true,
+      drawer: null,
       fixed: false,
       items: [
         {
@@ -142,12 +154,47 @@ export default {
           icon: 'mdi-table-chair',
           title: 'Рестораны',
           to: { name: 'entity', params: { entity: 'restaurant' } }
+        },
+        {
+          icon: 'mdi-silverware',
+          title: 'Категории ресторанов',
+          to: { name: 'entity', params: { entity: 'common-category' } }
+        },
+        {
+          icon: 'mdi-silverware-fork-knife',
+          title: 'Еда / напитки',
+          to: { name: 'entity', params: { entity: 'food' } }
+        },
+        {
+          icon: 'mdi-silverware-fork-knife',
+          title: 'Категории еды / напитков',
+          to: { name: 'entity', params: { entity: 'food-category' } }
+        },
+        {
+          icon: 'mdi-silverware-fork-knife',
+          title: 'Теги еды / напитков',
+          to: { name: 'entity', params: { entity: 'food-tag' } }
+        },
+        {
+          icon: 'mdi-account-circle',
+          title: 'Менеджеры ресторанов',
+          to: { name: 'entity', params: { entity: 'restaurant-manager' } }
+        },
+        {
+          icon: 'mdi-account-circle',
+          title: 'Курьеры',
+          to: { name: 'entity', params: { entity: 'courier' } }
+        },
+        {
+          icon: 'mdi-account-circle',
+          title: 'Клиенты',
+          to: { name: 'entity', params: { entity: 'customer' } }
         }
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: 'Vuetify.js'
+      title: process.env.APP_NAME || 'Food Service App'
     }
   },
   methods: {
