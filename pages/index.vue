@@ -9,9 +9,9 @@
       sm8
       md6
     >
-
       <!-- TODO remove later-->
       <v-alert color="primary" outlined>
+        <!-- eslint-disable-next-line -->
         <div class="headline text-center">TODO</div>
         <ol>
           <li>Может сделать размытую картинку на фоне формы авторизации...</li>

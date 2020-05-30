@@ -18,24 +18,27 @@
         </v-list-item-content>
       </v-list-item>
 
-      <v-divider></v-divider>
+      <v-divider />
 
       <v-list>
-        <v-list-item
-          v-for="(item, i) in items"
-          :key="i"
-          :to="item.to"
-          nuxt
-          router
-          exact
-        >
-          <v-list-item-action>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
-          </v-list-item-content>
-        </v-list-item>
+        <template v-for="(group, gi) in items">
+          <v-list-item
+            v-for="(item, i) in group"
+            :key="i"
+            :to="item.to"
+            nuxt
+            router
+            exact
+          >
+            <v-list-item-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider v-if="gi < (items.length - 1)" :key="`divider_${gi}`" />
+        </template>
       </v-list>
     </v-navigation-drawer>
     <v-app-bar
@@ -44,6 +47,7 @@
       app
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      <!-- eslint-disable -->
 <!--      <v-btn-->
 <!--        icon-->
 <!--        @click.stop="miniVariant = !miniVariant"-->
@@ -62,6 +66,7 @@
 <!--      >-->
 <!--        <v-icon>mdi-minus</v-icon>-->
 <!--      </v-btn>-->
+      <!-- eslint-enable -->
       <v-toolbar-title v-text="title" />
       <v-spacer />
       <v-menu v-if="$auth.loggedIn" offset-y>
@@ -70,8 +75,10 @@
             text
             v-on="on"
           >
+            <!-- eslint-disable-next-line -->
             <v-icon class="mr-2">mdi-account</v-icon>
             <span class="hidden-sm-and-down">{{ $auth.user.first_name }}</span>
+            <!-- eslint-disable-next-line -->
             <v-icon class="ml-2 hidden-sm-and-down">mdi-menu-down</v-icon>
           </v-btn>
         </template>
@@ -83,7 +90,7 @@
               <v-list-item-title>{{ $auth.user.first_name }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-          <v-divider class="hidden-md-and-up"></v-divider>
+          <v-divider class="hidden-md-and-up" />
           <v-list-item
             @click="logout"
           >
@@ -91,18 +98,21 @@
           </v-list-item>
         </v-list>
       </v-menu>
+      <!-- eslint-disable -->
 <!--      <v-btn-->
 <!--        icon-->
 <!--        @click.stop="rightDrawer = !rightDrawer"-->
 <!--      >-->
 <!--        <v-icon>mdi-menu</v-icon>-->
 <!--      </v-btn>-->
+      <!-- eslint-enable -->
     </v-app-bar>
     <v-content>
       <v-container>
         <nuxt />
       </v-container>
     </v-content>
+    <!-- eslint-disable -->
 <!--    <v-navigation-drawer-->
 <!--      v-model="rightDrawer"-->
 <!--      :right="right"-->
@@ -120,6 +130,7 @@
 <!--        </v-list-item>-->
 <!--      </v-list>-->
 <!--    </v-navigation-drawer>-->
+    <!-- eslint-enable -->
     <v-footer
       :fixed="fixed"
       absolute
@@ -138,59 +149,15 @@
 </template>
 
 <script>
+import { drawerMenuItems } from '../data-schema'
+
 export default {
   data () {
     return {
       clipped: false,
       drawer: null,
       fixed: false,
-      items: [
-        {
-          icon: 'mdi-home-outline',
-          title: 'Главная страница',
-          to: '/'
-        },
-        {
-          icon: 'mdi-table-chair',
-          title: 'Рестораны',
-          to: { name: 'entity', params: { entity: 'restaurant' } }
-        },
-        {
-          icon: 'mdi-silverware',
-          title: 'Категории ресторанов',
-          to: { name: 'entity', params: { entity: 'common-category' } }
-        },
-        {
-          icon: 'mdi-silverware-fork-knife',
-          title: 'Еда / напитки',
-          to: { name: 'entity', params: { entity: 'food' } }
-        },
-        {
-          icon: 'mdi-silverware-fork-knife',
-          title: 'Категории еды / напитков',
-          to: { name: 'entity', params: { entity: 'food-category' } }
-        },
-        {
-          icon: 'mdi-silverware-fork-knife',
-          title: 'Теги еды / напитков',
-          to: { name: 'entity', params: { entity: 'food-tag' } }
-        },
-        {
-          icon: 'mdi-account-circle',
-          title: 'Менеджеры ресторанов',
-          to: { name: 'entity', params: { entity: 'restaurant-manager' } }
-        },
-        {
-          icon: 'mdi-account-circle',
-          title: 'Курьеры',
-          to: { name: 'entity', params: { entity: 'courier' } }
-        },
-        {
-          icon: 'mdi-account-circle',
-          title: 'Клиенты',
-          to: { name: 'entity', params: { entity: 'customer' } }
-        }
-      ],
+      items: drawerMenuItems || [],
       miniVariant: false,
       right: true,
       rightDrawer: false,

@@ -12,6 +12,7 @@
     @change="onChanged"
   >
     <template v-slot:selection="{ file }">
+      <!-- eslint-disable -->
       <v-img
         eager
         contain
@@ -20,6 +21,7 @@
         :max-height="previewMaxHeight"
         @load="revokeBlobUrlDelayed"
       ></v-img>
+      <!-- eslint-enable -->
     </template>
   </v-file-input>
 </template>

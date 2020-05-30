@@ -37,8 +37,8 @@
             <form>
               <!-- todo ADD v-for AND vuelidate validation (see https://vuetifyjs.com/en/components/forms/#vuelidate)-->
               <template v-for="(field, key, index) in editableFields">
-
                 <!-- TODO add new field types (maybe slider with input for decimal types) -->
+                <!-- eslint-disable-next-line -->
                 <v-text-field
                   v-if="field.fieldType === 'input' || field.fieldType === 'decimal'"
                   :key="`field_${index}`"
@@ -51,6 +51,7 @@
                   @blur="$v.entity[key].$touch()"
                 ></v-text-field>
 
+                <!-- eslint-disable-next-line -->
                 <v-text-field
                   v-if="field.fieldType === 'password'"
                   :key="`field_${index}`"
@@ -64,6 +65,7 @@
                   @input="$v.entity[key].$touch()"
                   @blur="$v.entity[key].$touch()"
                 ></v-text-field>
+                <!-- eslint-disable-next-line -->
                 <v-text-field
                   v-if="field.fieldType === 'password' && field.confirmed === true"
                   :key="`field_${index}_confirmation`"
@@ -78,6 +80,7 @@
                   @blur="$v.entity[`${key}${field.confirmationSuffix || '_confirmation'}`].$touch()"
                 ></v-text-field>
 
+                <!-- eslint-disable-next-line -->
                 <v-textarea
                   v-if="field.fieldType === 'textarea'"
                   :key="`field_${index}`"
@@ -90,6 +93,7 @@
                   @blur="$v.entity[key].$touch()"
                 ></v-textarea>
 
+                <!-- eslint-disable-next-line -->
                 <v-image-preview-input
                   v-if="field.fieldType === 'image'"
                   :key="`field_${index}`"
@@ -98,12 +102,13 @@
                   :preview-height="250"
                 ></v-image-preview-input>
 
+                <!-- eslint-disable-next-line -->
                 <v-select
                   v-if="field.fieldType === 'relation'"
                   :key="`field_${index}`"
                   v-model="entity[key]"
                   :multiple="field.multiple || false"
-                  :chips="field.chips || (field.multiple ? true : false)"
+                  :chips="field.chips || !!field.multiple"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
                   :label="field.label"
                   :items="relatedResourcesData[field.relation.entity].data"
@@ -127,7 +132,17 @@
 
 <script>
 import { validationMixin } from 'vuelidate'
+import { objectToFormData } from 'object-to-formdata'
 import VImagePreviewInput from '../../../components/VImagePreviewInput'
+
+// const objectFilterWithKey = (obj, predicate) =>
+//   Object.keys(obj)
+//     .filter(key => predicate(obj[key], key))
+//     .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {})
+const objectFilter = (obj, predicate) =>
+  Object.keys(obj)
+    .filter(key => predicate(obj[key]))
+    .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {})
 
 export default {
   components: {
@@ -154,6 +169,32 @@ export default {
 
     const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
 
+    // fixes relations' properties values
+    const editableFieldsWithRelations = objectFilter(
+      resourceData.editableFields,
+      field => field.fieldType === 'relation' && !!field.relation && !!field.relation.entity
+    )
+    for (const key in editableFieldsWithRelations) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (editableFieldsWithRelations.hasOwnProperty(key) && entity.hasOwnProperty(key)) {
+        if (editableFieldsWithRelations[key].multiple !== true) {
+          // probably will never use
+          if (typeof entity[key] === 'object') {
+            entity[key] = entity[key][editableFieldsWithRelations[key].relation.valueKey]
+          }
+        } else {
+          for (const relationKey in entity[key]) {
+            // eslint-disable-next-line no-prototype-builtins
+            if (entity[key].hasOwnProperty(relationKey)) {
+              if (typeof entity[key][relationKey] === 'object') {
+                entity[key][relationKey] = entity[key][relationKey][editableFieldsWithRelations[key].relation.valueKey]
+              }
+            }
+          }
+        }
+      }
+    }
+
     return {
       entityName: params.entity,
       apiEndpoint,
@@ -175,26 +216,6 @@ export default {
       imagesPreviews: {}, // todo q
 
       relatedResourcesData: {}
-    }
-  },
-  created () {
-    this.loadRelatedResourcesData()
-  },
-  // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
-  validations () {
-    let validationRules = {}
-    if (typeof this.validations === 'function') {
-      const validationContext = {
-        pageType: 'edit'
-      }
-      validationRules = this.validations(validationContext)
-    } else {
-      validationRules = this.validations
-    }
-    return {
-      entity: {
-        ...validationRules // fixme
-      }
     }
   },
   computed: {
@@ -223,45 +244,63 @@ export default {
 
       return data
     },
+
+    entityRawDataForSaving () {
+      const entityEditableKeys = Object.keys(this.entity).filter({}.hasOwnProperty.bind(this.editableFields))
+      const preparedEntity = {}
+      for (const entityEditableKey of entityEditableKeys) {
+        preparedEntity[entityEditableKey] = this.entity[entityEditableKey]
+      }
+      return preparedEntity
+    },
     formDataForSaving () {
-      // eslint-disable-next-line prefer-const
-      let data = new FormData()
+      const formData = objectToFormData(
+        this.entityRawDataForSaving,
+        { indices: true }
+      )
       // eslint-disable-next-line prefer-const
       for (let key in this.editableFields) {
         // eslint-disable-next-line no-prototype-builtins
         if (this.editableFields.hasOwnProperty(key) && this.entity.hasOwnProperty(key)) {
-          if (Array.isArray(this.entity[key])) {
-            // TODO FIXME: при загрузке с backend'а мы получаем массив сущностей вместо массива идентификаторов
-            // https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript/8511350#8511350
-            if (typeof this.entity[key][0] === 'object' && this.entity[key][0] !== null) {
-              continue
-            }
-
-            for (let i = 0; i < this.entity[key].length; i++) {
-              data.append(`${key}[${i}]`, this.entity[key][i])
-            }
-            continue
-          }
-
-          // fixes null values for "formdata -> laravel backend"
-          if (this.entity[key] === undefined) {
-            data.append(key, '')
-            continue
-          }
-          // data.append(key, this.entity[key])
-          if (this.entity[key] !== null) {
-            data.append(key, this.entity[key])
-          }
           if (this.editableFields[key].confirmed === true) {
             const fieldKeyName = `${key}${this.editableFields[key].confirmationSuffix || '_confirmation'}`
-            data.append(fieldKeyName, this.entity[fieldKeyName])
+            formData.append(fieldKeyName, this.entity[fieldKeyName])
           }
         }
       }
 
-      data.append('_method', 'PUT') // for Laravel's backend
+      formData.append('_method', 'PUT') // for Laravel's backend
 
-      return data
+      return formData
+    },
+
+    // for development only
+    fdDebug () {
+      const res = {}
+      for (const pair of this.formDataForSaving.entries()) {
+        res[pair[0]] = pair[1]
+      }
+      return res
+    }
+  },
+  created () {
+    this.loadRelatedResourcesData()
+  },
+  // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
+  validations () {
+    let validationRules = {}
+    if (typeof this.validations === 'function') {
+      const validationContext = {
+        pageType: 'edit'
+      }
+      validationRules = this.validations(validationContext)
+    } else {
+      validationRules = this.validations
+    }
+    return {
+      entity: {
+        ...validationRules // fixme
+      }
     }
   },
   methods: {
@@ -305,6 +344,7 @@ export default {
 
         this.$axios.get(this.relatedResources[key].apiPath)
           .then((response) => {
+            // eslint-disable-next-line no-console
             console.log(response)
             const relatedResourcesDataTemp = this.relatedResourcesData
             relatedResourcesDataTemp[key].loading = false
@@ -312,6 +352,7 @@ export default {
             this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
           })
           .catch((error) => {
+            // eslint-disable-next-line no-console
             console.log(error.response)
           })
       }

@@ -14,6 +14,7 @@
       @change="onChanged"
     >
       <template v-slot:selection="{ file }">
+        <!-- eslint-disable -->
         <v-img
           eager
           contain
@@ -22,8 +23,10 @@
           :max-height="previewMaxHeight"
           @load="revokeBlobUrlDelayed"
         ></v-img>
+        <!-- eslint-enable -->
       </template>
     </v-file-input>
+    <!-- eslint-disable -->
     <v-img
       v-if="mode === 'preview'"
       eager
@@ -34,6 +37,7 @@
       :max-height="previewMaxHeight"
       @click="() => { mode = 'edit' }"
     ></v-img>
+    <!-- eslint-enable -->
   </div>
 </template>
 
@@ -70,6 +74,7 @@ export default {
       type: [Number, String],
       default: 300
     },
+    // eslint-disable-next-line
     value: {
       // type: [String, Object],
       default: undefined

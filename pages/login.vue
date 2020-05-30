@@ -5,9 +5,9 @@
       dark
       flat
     >
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-toolbar-title>Авторизация</v-toolbar-title>
-      <v-spacer></v-spacer>
+      <v-spacer />
     </v-toolbar>
     <v-card-text>
       <v-form>
@@ -69,6 +69,7 @@ export default {
         })
         await this.$router.push('/')
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err) // todo
         this.error = true
       } finally {

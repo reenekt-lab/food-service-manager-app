@@ -61,12 +61,35 @@ class DataSchema {
     )
     Object.assign(fieldsWithRelations, editableFieldsWithRelations)
 
+    // find all fields of type "dynamic-table" with reference
+    const editableFieldsWithReferences = objectFilter(
+      resource.editableFields,
+      field => field.fieldType === 'dynamic-table' && !!field.table && !!field.table.headers &&
+        field.table.headers.find((value, index, obj) => {
+          return value.type === 'reference' && !!value.reference
+        })
+    )
+    Object.assign(fieldsWithRelations, editableFieldsWithReferences)
+
     // get resource names from fields
     const resourceNames = []
     for (const key in fieldsWithRelations) {
       // eslint-disable-next-line no-prototype-builtins
       if (fieldsWithRelations.hasOwnProperty(key)) {
-        resourceNames.push(fieldsWithRelations[key].relation.entity)
+        if (fieldsWithRelations[key].fieldType === 'relation') {
+          resourceNames.push(fieldsWithRelations[key].relation.entity)
+        }
+        if (fieldsWithRelations[key].fieldType === 'dynamic-table') {
+          for (const headerKey in fieldsWithRelations[key].table.headers) {
+            // eslint-disable-next-line no-prototype-builtins
+            if (fieldsWithRelations[key].table.headers.hasOwnProperty(headerKey)) {
+              const header = fieldsWithRelations[key].table.headers[headerKey]
+              if (header.type === 'reference' && !!header.reference && !!header.reference.entity) {
+                resourceNames.push(header.reference.entity)
+              }
+            }
+          }
+        }
       }
     }
 

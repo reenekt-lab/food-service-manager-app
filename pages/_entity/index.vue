@@ -1,6 +1,5 @@
 <template>
   <v-container>
-
     <v-snackbar
       v-model="snackbar.active"
       top
@@ -178,7 +177,6 @@ export default {
       const tableHeadersRelationsTemp = tableHeaders.filter(header => header.type === 'relation' && !!header.relation)
       for (const key in tableHeadersRelationsTemp) {
         // TODO show multiple relations' items in modal (that opens by clicking on todo: "button in cell")
-        console.log(tableHeadersRelationsTemp[key].text, tableHeadersRelationsTemp[key].multiple)
         if (tableHeadersRelationsTemp[key].multiple !== true) {
           this.tableHeadersRelations[`item.${tableHeadersRelationsTemp[key].value}`] = tableHeadersRelationsTemp[key].relation
         }
@@ -198,6 +196,7 @@ export default {
           this.entities = response.data
         })
         .catch((error) => {
+          // eslint-disable-next-line no-console
           console.log(error.response)
         })
         .finally(() => {

@@ -34,7 +34,9 @@
               <tbody>
                 <tr v-for="(field, i) in fields" :key="`field-${i}`">
                   <td>{{ field.text }}</td>
-                  <td v-if="field.type === 'text' || field.type === undefined">{{ entity[field.value] }}</td>
+                  <td v-if="field.type === 'text' || field.type === undefined">
+                    {{ entity[field.value] }}
+                  </td>
                   <td v-if="field.type === 'relation' && field.multiple !== true">
                     <!-- eslint-disable -->
                     <v-btn v-if="lodashGet(entity, field.value)" text small
@@ -58,7 +60,8 @@
                     <!-- eslint-enable -->
                   </td>
                   <td v-if="field.type === 'image'">
-<!--                    <img :src="entity[field.value]" :alt="field.text">-->
+                    <!-- <img :src="entity[field.value]" :alt="field.text">-->
+                    <!-- eslint-disable-next-line -->
                     <v-img
                       eager
                       contain
