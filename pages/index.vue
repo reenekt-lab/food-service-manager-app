@@ -10,7 +10,7 @@
       md6
     >
       <!-- TODO remove later-->
-      <v-alert color="primary" outlined>
+      <v-alert color="primary" outlined v-if="false">
         <!-- eslint-disable-next-line -->
         <div class="headline text-center">TODO</div>
         <ol>
@@ -25,7 +25,7 @@
         </v-card-title>
         <v-card-text>
           <p>Все доступные разделы можно увидеть в левом меню. Чтобы открыть меню нажмите на кнопку <v-icon>mdi-menu</v-icon> в верхнем левом углу.</p>
-          <div>
+          <div v-if="false">
             <span>Разработчик сайта: </span> <span class="font-weight-medium">Андрей Семенцов</span>
             <div class="d-inline-block">
               <a target="_blank" href="https://github.com/reenekt" style="text-decoration: none;"><v-icon class="text--primary">mdi-github</v-icon></a>

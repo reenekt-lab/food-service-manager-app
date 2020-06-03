@@ -172,7 +172,10 @@ export default {
       //   return header.type !== 'image'
       // })
       // TODO show multiple relations' items in modal (that opens by clicking on todo: "button in cell")
-      const tableHeaders = headers.filter(header => header.type !== 'image' && !(header.type === 'relation' && header.multiple === true))
+      const tableHeaders = headers.filter(header => header.type !== 'image' &&
+        !(header.type === 'relation' && header.multiple === true) &&
+        header.type !== 'dynamic-table'
+      )
 
       const tableHeadersRelationsTemp = tableHeaders.filter(header => header.type === 'relation' && !!header.relation)
       for (const key in tableHeadersRelationsTemp) {

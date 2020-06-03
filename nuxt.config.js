@@ -95,6 +95,19 @@ export default {
       }
     }
   },
+  /*
+  ** PWA module configuration
+  ** See https://pwa.nuxtjs.org/
+  */
+  pwa: {
+    manifest: {
+      name: 'Food Service Admin',
+      short_name: 'Food Service Admin',
+      description: 'Приложение для управления Food Service',
+      theme_color: colors.orange.darken1,
+      lang: 'ru',
+    }
+  },
 
   router: {
     middleware: ['auth']

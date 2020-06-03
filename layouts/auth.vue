@@ -1,6 +1,13 @@
 <template>
   <v-app id="inspire">
     <v-content>
+      <!--<v-img class="layout-bg" :src="require('../assets/bg_pattern.png')" eager></v-img>-->
+      <div
+        class="layout-bg"
+        :style="{
+          'background-image': backgroundImageUrl
+        }"
+      />
       <v-container
         class="fill-height"
         fluid
@@ -26,26 +33,24 @@
 export default {
   data () {
     return {
-      clipped: false,
-      drawer: true,
-      fixed: false,
-      items: [
-        {
-          icon: 'mdi-home-outline',
-          title: 'Главная страница',
-          to: '/'
-        },
-        {
-          icon: 'mdi-table-chair',
-          title: 'Рестораны',
-          to: '/restaurant'
-        }
-      ],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: 'Auth'
+      backgroundImage: require('../assets/bg_pattern.png')
+    }
+  },
+  computed: {
+    backgroundImageUrl () {
+      return `url(${this.backgroundImage})`
     }
   }
 }
 </script>
+
+<style scoped lang="scss">
+  .layout-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-repeat: repeat;
+  }
+</style>

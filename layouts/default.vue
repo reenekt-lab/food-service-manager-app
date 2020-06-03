@@ -13,7 +13,7 @@
             {{ title }}
           </v-list-item-title>
           <v-list-item-subtitle>
-            Menu
+            Меню
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -24,7 +24,7 @@
         <template v-for="(group, gi) in items">
           <v-list-item
             v-for="(item, i) in group"
-            :key="i"
+            :key="`group_${gi}_item_${i}`"
             :to="item.to"
             nuxt
             router
@@ -45,6 +45,8 @@
       :clipped-left="clipped"
       fixed
       app
+      color="orange darken-1"
+      dark
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <!-- eslint-disable -->
@@ -139,8 +141,10 @@
       <v-row>
         <v-col cols12>
           <div class="d-flex justify-space-between">
-            <span>&copy; {{ new Date().getFullYear() }} Andrew Sementsov</span>
-            <span>Made by <a target="_blank" href="https://github.com/reenekt">Andrew Sementsov</a></span>
+            <span v-if="false">&copy; {{ new Date().getFullYear() }} Andrew Sementsov</span>
+            <span>&copy; {{ new Date().getFullYear() }} Андрей Семенцов</span>
+            <span v-if="false">Made by <a target="_blank" href="https://github.com/reenekt">Andrew Sementsov</a></span>
+            <span>Сайт разработал <a target="_blank" href="https://github.com/reenekt">Андрей Семенцов</a></span>
           </div>
         </v-col>
       </v-row>
