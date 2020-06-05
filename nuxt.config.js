@@ -39,7 +39,8 @@ export default {
   */
   plugins: [
     { src: '~plugins/vuelidate', ssr: false },
-    { src: '~plugins/data-schema' }
+    { src: '~plugins/data-schema' },
+    { src: '~plugins/pwa-installer', ssr: false }
   ],
   /*
   ** Nuxt.js dev-modules
@@ -100,12 +101,15 @@ export default {
   ** See https://pwa.nuxtjs.org/
   */
   pwa: {
+    workbox: {
+      dev: true
+    },
     manifest: {
       name: 'Food Service Admin',
       short_name: 'Food Service Admin',
       description: 'Приложение для управления Food Service',
       theme_color: colors.orange.darken1,
-      lang: 'ru',
+      lang: 'ru'
     }
   },
 

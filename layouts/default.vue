@@ -7,39 +7,48 @@
       fixed
       app
     >
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title class="title">
-            {{ title }}
-          </v-list-item-title>
-          <v-list-item-subtitle>
-            Меню
-          </v-list-item-subtitle>
-        </v-list-item-content>
-      </v-list-item>
+      <template #default>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title class="title">
+              {{ title }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              Меню
+            </v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
 
-      <v-divider />
+        <v-divider />
 
-      <v-list>
-        <template v-for="(group, gi) in items">
-          <v-list-item
-            v-for="(item, i) in group"
-            :key="`group_${gi}_item_${i}`"
-            :to="item.to"
-            nuxt
-            router
-            exact
-          >
-            <v-list-item-action>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-action>
-            <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
-            </v-list-item-content>
-          </v-list-item>
-          <v-divider v-if="gi < (items.length - 1)" :key="`divider_${gi}`" />
-        </template>
-      </v-list>
+        <v-list>
+          <template v-for="(group, gi) in items">
+            <v-list-item
+              v-for="(item, i) in group"
+              :key="`group_${gi}_item_${i}`"
+              :to="item.to"
+              nuxt
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+            <v-divider v-if="gi < (items.length - 1)" :key="`divider_${gi}`" />
+          </template>
+        </v-list>
+      </template>
+      <template #append>
+        <pwa-prompt-card
+          v-if="showPwaPromptCard"
+          @accepted="promptPwaInstall"
+          @declined="hidePwaPromptCardCard"
+        />
+      </template>
     </v-navigation-drawer>
     <v-app-bar
       :clipped-left="clipped"
@@ -154,8 +163,12 @@
 
 <script>
 import { drawerMenuItems } from '../data-schema'
+import PwaPromptCard from '../components/PwaPromptCard/PwaPromptCard'
 
 export default {
+  components: {
+    PwaPromptCard
+  },
   data () {
     return {
       clipped: false,
@@ -165,14 +178,39 @@ export default {
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: process.env.APP_NAME || 'Food Service App'
+      title: process.env.APP_NAME || 'Food Service App',
+      showPwaPromptCard: false
     }
+  },
+  mounted () {
+    window.addEventListener('pwa-prompt-caught', (event) => {
+      this.showPwaPromptCard = this.$pwaInstaller.canBeInstalled
+    })
   },
   methods: {
     async logout () {
       await this.$auth.logout()
       await this.$router.push('/login')
+    },
+    promptPwaInstall () {
+      this.$pwaInstaller.promptInstall()
+      this.hidePwaPromptCardCard()
+    },
+    hidePwaPromptCardCard () {
+      this.showPwaPromptCard = false
     }
   }
 }
 </script>
+
+<style scoped lang="scss">
+  header {
+    .v-toolbar__content {
+      .v-toolbar__title {
+        @media screen and (max-width: 330px) {
+          font-size: 1.15rem !important;
+        }
+      }
+    }
+  }
+</style>

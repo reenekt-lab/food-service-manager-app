@@ -126,10 +126,12 @@
                 >
                   <v-card-title>{{ field.label }}</v-card-title>
                   <v-card-text>
+                    <!-- TODO add isFieldEnabled() to other field's types -->
                     <dynamic-table
                       :headers="field.table.headers"
                       :items.sync="entity[key]"
                       :reference-data="relatedResourcesData"
+                      :editable="isFieldEnabled(field)"
                     />
                   </v-card-text>
                 </v-card>
@@ -164,13 +166,15 @@ import { validationMixin } from 'vuelidate'
 import { objectToFormData } from 'object-to-formdata'
 import VImagePreviewInput from '../../components/VImagePreviewInput'
 import DynamicTable from '../../components/DynamicTable/DynamicTable'
+import entityWatchersMixin from '../../mixins/entityWatchersMixin'
+import relatedResourcesDataLoaderMixin from '../../mixins/relatedResourcesDataLoaderMixin'
 
 export default {
   components: {
     VImagePreviewInput,
     DynamicTable
   },
-  mixins: [validationMixin],
+  mixins: [validationMixin, entityWatchersMixin, relatedResourcesDataLoaderMixin],
 
   async asyncData ({ app, error, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
@@ -224,8 +228,7 @@ export default {
         active: false,
         color: 'info',
         text: ''
-      },
-      relatedResourcesData: {}
+      }
     }
   },
   computed: {
@@ -274,9 +277,6 @@ export default {
       return formData
     }
   },
-  created () {
-    this.loadRelatedResourcesData()
-  },
   // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
   validations () {
     // console.log('VALIDATIONS')
@@ -322,29 +322,21 @@ export default {
           })
       }
     },
-    loadRelatedResourcesData () {
-      for (const key in this.relatedResources) {
-        if (!this.relatedResourcesData[key]) {
-          const relatedResourcesDataTemp = this.relatedResourcesData
-          relatedResourcesDataTemp[key] = {
-            loading: true,
-            data: []
+    isFieldEnabled (field) {
+      let result = true
+      // TODO many checks
+      for (const header of field.table.headers) {
+        if (header.type === 'reference' &&
+          !!header.reference &&
+          !!header.reference.extra &&
+          !!header.reference.extra.enableWhen &&
+          !!header.reference.extra.enableWhen.filled) {
+          for (const propertyKey of header.reference.extra.enableWhen.filled) {
+            result = result && !!this.entity[propertyKey]
           }
-          this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
         }
-
-        this.$axios.get(this.relatedResources[key].apiPath)
-          .then((response) => {
-            const relatedResourcesDataTemp = this.relatedResourcesData
-            relatedResourcesDataTemp[key].loading = false
-            relatedResourcesDataTemp[key].data = response.data.data
-            this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
-          })
-          .catch((error) => {
-            // eslint-disable-next-line no-console
-            console.log(error.response)
-          })
       }
+      return result
     }
   },
   head () {

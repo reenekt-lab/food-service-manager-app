@@ -20,7 +20,7 @@
       </v-alert>
 
       <v-card>
-        <v-card-title class="headline">
+        <v-card-title class="headline" style="word-break: break-word;">
           Добро пожаловать в приложение для администрирования и управления Food Service
         </v-card-title>
         <v-card-text>

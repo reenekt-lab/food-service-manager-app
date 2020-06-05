@@ -31,7 +31,7 @@
         </v-snackbar>
 
         <v-card>
-          <v-card-title>Редактирование "{{ entity ? (entity.name ? entity.name : `${entityName} ${entity.id}`) : (entityName ? entityName : 'ресурса') }}"</v-card-title>
+          <v-card-title>Редактирование "{{ entity ? (entity.name ? entity.name : `${resourceData.titles.entity} #${entity.id}`) : (entityName ? entityName : 'ресурса') }}"</v-card-title>
           <v-card-text>
             <!-- TODO модификаторы вроде outlined для всех полей в форме (пример - https://vuetifyjs.com/en/components/textarea/#textareas) -->
             <form>
@@ -117,6 +117,37 @@
                   :item-value="field.relation.valueKey"
                   clearable
                 ></v-select>
+
+                <v-card
+                  v-if="field.fieldType === 'dynamic-table'"
+                  :key="`field_${index}`"
+                >
+                  <v-card-title>{{ field.label }}</v-card-title>
+                  <v-card-text>
+                    <!-- TODO add isFieldEnabled() to other field's types -->
+                    <client-only>
+                      <dynamic-table
+                        :headers="field.table.headers"
+                        :items.sync="entity[key]"
+                        :reference-data="relatedResourcesData"
+                        :editable="isFieldEnabled(field)"
+                      />
+                    </client-only>
+                  </v-card-text>
+                </v-card>
+
+                <!-- eslint-disable-next-line -->
+                <v-select
+                  v-if="field.fieldType === 'enumeration'"
+                  :key="`field_${index}`"
+                  v-model="entity[key]"
+                  :multiple="field.multiple || false"
+                  :chips="field.chips || !!field.multiple"
+                  :error="$v.entity[key].$dirty && $v.entity[key].$error"
+                  :label="field.label"
+                  :items="resourceData.enumerations[field.enumeration]"
+                  clearable
+                ></v-select>
               </template>
 
               <v-btn color="primary" class="mr-4" :loading="loading" @click="submit">
@@ -134,6 +165,9 @@
 import { validationMixin } from 'vuelidate'
 import { objectToFormData } from 'object-to-formdata'
 import VImagePreviewInput from '../../../components/VImagePreviewInput'
+import DynamicTable from '../../../components/DynamicTable/DynamicTable'
+import entityWatchersMixin from '../../../mixins/entityWatchersMixin'
+import relatedResourcesDataLoaderMixin from '../../../mixins/relatedResourcesDataLoaderMixin'
 
 // const objectFilterWithKey = (obj, predicate) =>
 //   Object.keys(obj)
@@ -146,9 +180,10 @@ const objectFilter = (obj, predicate) =>
 
 export default {
   components: {
-    VImagePreviewInput
+    VImagePreviewInput,
+    DynamicTable
   },
-  mixins: [validationMixin],
+  mixins: [validationMixin, entityWatchersMixin, relatedResourcesDataLoaderMixin],
 
   async asyncData ({ app, error, $axios, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
@@ -179,7 +214,7 @@ export default {
       if (editableFieldsWithRelations.hasOwnProperty(key) && entity.hasOwnProperty(key)) {
         if (editableFieldsWithRelations[key].multiple !== true) {
           // probably will never use
-          if (typeof entity[key] === 'object') {
+          if (typeof entity[key] === 'object' && entity[key] !== null) {
             entity[key] = entity[key][editableFieldsWithRelations[key].relation.valueKey]
           }
         } else {
@@ -201,6 +236,7 @@ export default {
       entity,
       editableFields: resourceData.editableFields,
       validations: resourceData.validations,
+      resourceData,
       relatedResources
     }
   },
@@ -211,11 +247,7 @@ export default {
         active: false,
         color: 'info',
         text: ''
-      },
-
-      imagesPreviews: {}, // todo q
-
-      relatedResourcesData: {}
+      }
     }
   },
   computed: {
@@ -283,9 +315,6 @@ export default {
       return res
     }
   },
-  created () {
-    this.loadRelatedResourcesData()
-  },
   // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
   validations () {
     let validationRules = {}
@@ -331,36 +360,26 @@ export default {
           })
       }
     },
-    loadRelatedResourcesData () {
-      for (const key in this.relatedResources) {
-        if (!this.relatedResourcesData[key]) {
-          const relatedResourcesDataTemp = this.relatedResourcesData
-          relatedResourcesDataTemp[key] = {
-            loading: true,
-            data: []
+    isFieldEnabled (field) {
+      let result = true
+      // TODO many checks
+      for (const header of field.table.headers) {
+        if (header.type === 'reference' &&
+          !!header.reference &&
+          !!header.reference.extra &&
+          !!header.reference.extra.enableWhen &&
+          !!header.reference.extra.enableWhen.filled) {
+          for (const propertyKey of header.reference.extra.enableWhen.filled) {
+            result = result && !!this.entity[propertyKey]
           }
-          this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
         }
-
-        this.$axios.get(this.relatedResources[key].apiPath)
-          .then((response) => {
-            // eslint-disable-next-line no-console
-            console.log(response)
-            const relatedResourcesDataTemp = this.relatedResourcesData
-            relatedResourcesDataTemp[key].loading = false
-            relatedResourcesDataTemp[key].data = response.data.data
-            this.relatedResourcesData = Object.assign({}, relatedResourcesDataTemp)
-          })
-          .catch((error) => {
-            // eslint-disable-next-line no-console
-            console.log(error.response)
-          })
       }
+      return result
     }
   },
   head () {
     return {
-      title: `${this.entity.name} – Редактирование`
+      title: `${this.entity.name || this.resourceData.titles.entity} – Редактирование`
     }
   }
 }

@@ -33,7 +33,10 @@
               </thead>
               <tbody>
                 <tr v-for="(field, i) in fields" :key="`field-${i}`">
-                  <td>{{ field.text }}</td>
+                  <td v-if="field.type !== 'dynamic-table'">
+                    {{ field.text }}
+                  </td>
+
                   <td v-if="field.type === 'text' || field.type === undefined">
                     {{ entity[field.value] }}
                   </td>
@@ -71,6 +74,29 @@
                       :max-width="350"
                     ></v-img>
                   </td>
+                  <td v-if="field.type === 'enumeration'">
+                    {{
+                      resourceData.enumerations[field.enumeration].find(item => item.value === entity[field.value]) ?
+                        resourceData.enumerations[field.enumeration].find(item => item.value === entity[field.value]).text :
+                        '-'
+                    }}
+                  </td>
+                  <td v-if="field.type === 'dynamic-table'" colspan="2" style="padding: 8px 1px;">
+                    <v-card>
+                      <v-card-title>{{ field.text }}</v-card-title>
+                      <v-card-text>
+                        <!-- TODO add isFieldEnabled() to other field's types -->
+                        <client-only>
+                          <dynamic-table
+                            :headers="field.table.headers"
+                            :items.sync="entity[field.value]"
+                            :reference-data="relatedResourcesData"
+                            :editable="false"
+                          />
+                        </client-only>
+                      </v-card-text>
+                    </v-card>
+                  </td>
                 </tr>
               </tbody>
             </v-simple-table>
@@ -82,9 +108,15 @@
 </template>
 
 <script>
+import DynamicTable from '../../../components/DynamicTable/DynamicTable'
+import relatedResourcesDataLoaderMixin from '../../../mixins/relatedResourcesDataLoaderMixin'
 const lodashGet = require('lodash.get')
 
 export default {
+  components: {
+    DynamicTable
+  },
+  mixins: [relatedResourcesDataLoaderMixin],
   async asyncData ({ app, error, $axios, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
     if (!resourceData) {
@@ -94,10 +126,15 @@ export default {
     // todo move next line to doc page/file
     // details: https://axios.nuxtjs.org/usage.html#shortcuts
     const data = await $axios.$get(resourceData.getResourceEndpoint(params.id))
+
+    const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
+
     return {
       entityName: params.entity,
       entity: data.data,
-      fields: resourceData.headers
+      fields: resourceData.headers,
+      resourceData,
+      relatedResources
     }
   },
   data () {

@@ -99,25 +99,6 @@ const order = {
         required: true
       }
     },
-    content: {
-      label: 'Содержимое заказа',
-      fieldType: 'dynamic-table',
-      table: {
-        headers: [
-          {
-            text: 'Блюдо / напиток',
-            value: 'food_id',
-            type: 'reference',
-            reference: { entity: 'food', valueKey: 'id', textKey: 'name' }
-          },
-          {
-            text: 'Количество',
-            value: 'count'
-          }
-        ]
-      },
-      fieldParams: {}
-    },
     restaurant_id: {
       label: 'Ресторан',
       fieldType: 'relation',
@@ -129,6 +110,51 @@ const order = {
       fieldParams: {
         required: true
       }
+    },
+    content: {
+      label: 'Содержимое заказа',
+      fieldType: 'dynamic-table',
+      table: {
+        headers: [
+          {
+            text: 'Блюдо / напиток',
+            value: 'food_id',
+            type: 'reference',
+            reference: {
+              entity: 'food',
+              valueKey: 'id',
+              textKey: 'name',
+              extra: {
+                enableWhen: {
+                  filled: [
+                    'restaurant_id'
+                  ]
+                },
+                resetWhen: {
+                  changed: [
+                    'restaurant_id'
+                  ]
+                },
+                loadConditions: {
+                  // maybe will created static conditions
+                  entityRelated: {
+                    // maybe will created post-body conditions, or maybe additional headers
+                    query: {
+                      restaurant: 'restaurant_id'
+                    }
+                  }
+                  // todo (maybe) property: should reload on change, default = true
+                }
+              }
+            }
+          },
+          {
+            text: 'Количество',
+            value: 'count'
+          }
+        ]
+      },
+      fieldParams: {}
     },
     courier_id: {
       label: 'Курьер',

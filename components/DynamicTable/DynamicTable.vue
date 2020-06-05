@@ -2,7 +2,7 @@
   <v-data-table
     :headers="tableHeaders"
     :items="items"
-    :loading="loading"
+    :loading="isAnyRelatedResourceLoading"
     disable-pagination
     disable-filtering
     disable-sort
@@ -11,72 +11,79 @@
       'disable-items-per-page': true
     }"
     hide-default-footer
+    :hide-default-header="$vuetify.breakpoint.xsOnly"
   >
     <template v-for="(hkfsVal, hkfsIndex) in headersKeysForSlots" v-slot:[hkfsVal]="{ item, header }">
-      <v-edit-dialog
+      <v-skeleton-loader
         :key="`edit-dialog-${hkfsIndex}`"
-        :return-value.sync="item[header.value]"
-        :large="editable"
-        :persistent="editable"
-        cancel-text="Отмена"
-        save-text="Сохранить"
-        @save="save(item, header)"
-        @cancel="cancel(item, header)"
-        @open="open(item, header)"
-        @close="close(item, header)"
+        :loading="isAnyRelatedResourceLoading"
+        type="text"
       >
-        <template v-slot:default>
-          <div v-if="header.type === undefined || header.type === 'input'">
-            {{ item[header.value] }}
-          </div>
-          <div v-if="header.type === 'reference'">
-            <div v-if="referenceData[header.reference.entity] && item[header.value] !== undefined">
-              <!-- TODO use identificator (header.reference.valueKey) instead of index (item[header.value]) -->
-              <!--referenceData[header.reference.entity][item[header.value]][header.reference.textKey]-->
-              {{
-                objectFindBy(
-                  referenceData[header.reference.entity].data,
-                  header.reference.valueKey,
-                  item[header.value]
-                )[header.reference.textKey]
-              }}
+        <v-edit-dialog
+          :return-value.sync="item[header.value]"
+          :large="editable"
+          :persistent="editable"
+          cancel-text="Отмена"
+          save-text="Сохранить"
+          @save="save(item, header)"
+          @cancel="cancel(item, header)"
+          @open="open(item, header)"
+          @close="close(item, header)"
+        >
+          <template v-slot:default>
+            <div v-if="header.type === undefined || header.type === 'input'">
+              {{ item[header.value] }}
             </div>
-            <div v-else>
-              &mdash;
+            <div v-if="header.type === 'reference'">
+              <div v-if="referenceData[header.reference.entity] && item[header.value] !== undefined && !isAnyRelatedResourceLoading">
+                <!-- TODO use identificator (header.reference.valueKey) instead of index (item[header.value]) -->
+                <!--referenceData[header.reference.entity][item[header.value]][header.reference.textKey]-->
+                {{
+                  objectFindBy(
+                    referenceData[header.reference.entity].data,
+                    header.reference.valueKey,
+                    item[header.value]
+                  )[header.reference.textKey]
+                }}
+              </div>
+              <div v-else>
+                &mdash;
+              </div>
             </div>
-          </div>
-        </template>
-        <template v-slot:input>
-          <!-- eslint-disable-next-line -->
-          <v-text-field
-            v-if="header.type === undefined || header.type === 'input'"
-            v-model="item[header.value]"
-            :label="header.text"
-            counter
-            autofocus
-            :disabled="!editable"
-          ></v-text-field>
+          </template>
+          <template v-slot:input>
+            <!-- eslint-disable-next-line -->
+            <v-text-field
+              v-if="header.type === undefined || header.type === 'input'"
+              v-model="item[header.value]"
+              :label="header.text"
+              counter
+              autofocus
+              :disabled="!editable"
+            ></v-text-field>
 
-          <!-- eslint-disable-next-line -->
-          <v-select
-            v-if="header.type === 'reference'"
-            v-model="item[header.value]"
-            :multiple="header.multiple || false"
-            :chips="header.chips || !!header.multiple"
-            :label="header.text"
-            :items="referenceData[header.reference.entity].data"
-            :loading="referenceData[header.reference.entity].loading"
-            :item-text="header.reference.textKey"
-            :item-value="header.reference.valueKey"
-            clearable
-            :disabled="!editable"
-          ></v-select>
-        </template>
-      </v-edit-dialog>
+            <!-- eslint-disable-next-line -->
+            <v-select
+              v-if="header.type === 'reference'"
+              v-model="item[header.value]"
+              :multiple="header.multiple || false"
+              :chips="header.chips || !!header.multiple"
+              :label="header.text"
+              :items="referenceData[header.reference.entity].data"
+              :loading="referenceData[header.reference.entity].loading"
+              :item-text="header.reference.textKey"
+              :item-value="header.reference.valueKey"
+              clearable
+              :disabled="!editable"
+            ></v-select>
+          </template>
+        </v-edit-dialog>
+      </v-skeleton-loader>
     </template>
 
-    <template #item.removeActionColumn="{ item }">
+    <template v-if="editable" #item.removeActionColumn="{ item }">
       <v-btn
+        v-show="!isAnyRelatedResourceLoading"
         icon
         color="error"
         @click="removeItemByIndex(items.indexOf(item))"
@@ -118,11 +125,6 @@ export default {
       required: true, // todo think about it
       type: Array
     },
-    loading: {
-      required: false,
-      type: Boolean,
-      default: false
-    },
     referenceData: {
       required: false,
       type: Object,
@@ -145,10 +147,11 @@ export default {
       return result
     },
     tableHeaders () {
-      return [
-        ...this.headers,
-        { text: '', value: 'removeActionColumn' }
-      ]
+      const headers = [...this.headers]
+      if (this.$vuetify.breakpoint.smAndUp) {
+        headers.push({ text: '', value: 'removeActionColumn' })
+      }
+      return headers
     },
     headersKeysForSlots () {
       const result = []
@@ -158,6 +161,16 @@ export default {
         }
       }
       return result
+    },
+    isAnyRelatedResourceLoading () {
+      for (const key in this.referenceData) {
+        if (Object.prototype.hasOwnProperty.call(this.referenceData, key)) {
+          if (this.referenceData[key].loading === true) {
+            return true
+          }
+        }
+      }
+      return false
     }
   },
   methods: {
@@ -182,9 +195,13 @@ export default {
       items.push(newItem)
       this.$emit('update:items', items)
     },
-    objectFindBy (associativeArray, key, value) {
+    objectFindBy (associativeArray, key, value, valueToNumber = true) {
       return associativeArray.find((aaValue, aaIndex, aaObj) => {
-        return aaValue[key] === value
+        if (valueToNumber === true) {
+          return +aaValue[key] === +value
+        } else {
+          return aaValue[key] === value
+        }
       })
     },
     removeItemByIndex (index) {
