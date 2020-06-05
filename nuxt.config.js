@@ -101,9 +101,6 @@ export default {
   ** See https://pwa.nuxtjs.org/
   */
   pwa: {
-    workbox: {
-      dev: true
-    },
     manifest: {
       name: 'Food Service Admin',
       short_name: 'Food Service Admin',
