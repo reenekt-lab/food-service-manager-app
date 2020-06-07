@@ -9,19 +9,9 @@
       sm8
       md6
     >
-      <!-- TODO remove later-->
-      <v-alert color="primary" outlined v-if="false">
-        <!-- eslint-disable-next-line -->
-        <div class="headline text-center">TODO</div>
-        <ol>
-          <li>Может сделать размытую картинку на фоне формы авторизации...</li>
-          <li>Больше доступных типов полей на страницах создать/редактировать</li>
-        </ol>
-      </v-alert>
-
       <v-card>
         <v-card-title class="headline" style="word-break: break-word;">
-          Добро пожаловать в приложение для администрирования и управления Food Service
+          Добро пожаловать в приложение для управления рестораном
         </v-card-title>
         <v-card-text>
           <p>Все доступные разделы можно увидеть в левом меню. Чтобы открыть меню нажмите на кнопку <v-icon>mdi-menu</v-icon> в верхнем левом углу.</p>

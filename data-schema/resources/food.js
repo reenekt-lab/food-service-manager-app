@@ -6,6 +6,26 @@ const food = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+  // Middleware abilities
+  createAbility: true,
+  editAbility (context) {
+    if (process.client) {
+      const { nuxtState } = context
+      return context.app.$auth.user.restaurant_id === nuxtState.data[0].entity.restaurant_id
+    }
+    return false
+  },
+  // Page abilities
+  canCreate (user) {
+    return true
+  },
+  canEdit (user, entity) {
+    return user.restaurant_id === entity.restaurant_id
+  },
+  canDelete (user, entity) {
+    return user.restaurant_id === entity.restaurant_id
+  },
+
   titles: {
     entity: 'Еда / напиток',
     entities: 'Еда / напитки'
@@ -14,17 +34,22 @@ const food = {
   getResourceEndpoint (id) {
     return `${this.apiPath}/${id}`
   },
+  endpointRequestConfig: {
+    params: {
+      restaurant: '{{ auth.user.restaurant_id }}'
+    }
+  },
   headers: [
     { text: 'ID', value: 'id' },
     { text: 'Название', value: 'name' },
     { text: 'Описание', value: 'description' },
     { text: 'Цена', value: 'cost' }, // todo add "type: 'decimal'"
-    {
-      text: 'Ресторан',
-      value: 'restaurant.name',
-      type: 'relation',
-      relation: { entity: 'restaurant', key: 'restaurant.id' }
-    },
+    // {
+    //   text: 'Ресторан',
+    //   value: 'restaurant.name',
+    //   type: 'relation',
+    //   relation: { entity: 'restaurant', key: 'restaurant.id' }
+    // },
     {
       text: 'Категории',
       value: 'categories',

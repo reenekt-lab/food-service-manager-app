@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+const lodashGet = require('lodash.get')
+
 // https://hisk.io/javascript-snake-to-camel/
 const snakeToCamel = str => str.replace(
   /([-_][a-z])/g,
@@ -26,6 +28,33 @@ const objectFilter = (obj, predicate) =>
 class DataSchema {
   constructor (schemePath = '../data-schema.js') {
     this.schemePath = schemePath
+    this.globalContext = {}
+  }
+
+  // todo improve: add strings building with ...args
+  globalContextCompileString (strings, ...args) {
+    let resultString = ''
+    for (let i = 0; i < args.length; i++) {
+      resultString += strings[i] + args[i].toString()
+    }
+    resultString += strings[strings.length - 1]
+
+    // const matches = strings[0].match(/{{\s?(\S+)\s?}}/g).map(value => value.substring(2, value.length - 2).trim())
+    const matches = resultString.match(/{{\s?(\S+)\s?}}/g) || [] // [] -> if no matches
+
+    // todo: replace later with Object.fromEntries()
+    const matchesMap = {}
+    for (const match of matches) {
+      const valuePath = match.substring(2, match.length - 2).trim()
+      matchesMap[match] = lodashGet(this.globalContext, valuePath)
+    }
+
+    for (const matchedSubstring in matchesMap) {
+      const replacement = matchesMap[matchedSubstring]
+      resultString = resultString.replace(matchedSubstring, replacement)
+    }
+
+    return resultString
   }
 
   install (Vue, options) {
@@ -36,13 +65,16 @@ class DataSchema {
   // todo более легковесный импорт
   // TODO !!! возможно нужно будет транспилировать, т к this.schemePath не работает
   async loadResource (resourceName, extraData = {}) {
+    if (!resourceName) { return }
     const preparedResourceName = snakeToCamel(resourceName)
 
     const dataSchemaModule = await import('../data-schema.js')
     // eslint-disable-next-line no-prototype-builtins
     if (dataSchemaModule.default.resources.hasOwnProperty(preparedResourceName)) {
       return Object.assign({}, dataSchemaModule.default.resources[preparedResourceName], {
-        extra: extraData
+        extra: extraData,
+        globalContext: this.globalContext,
+        dataSchema: this
       })
     }
   }

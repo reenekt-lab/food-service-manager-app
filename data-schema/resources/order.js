@@ -6,6 +6,51 @@ const order = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+
+  createAbility: false,
+  editAbility (context) {
+    return false
+  },
+  // Page abilities
+  canCreate (user) {
+    return false
+  },
+  canEdit (user, entity) {
+    return false
+  },
+  canDelete (user, entity) {
+    return false
+  },
+  accessAbility (context) {
+    if (process.client) {
+      const { nuxtState, redirect } = context
+      if (!nuxtState.data[0] || !nuxtState.data[0].entity) {
+        return () => {
+          return redirect({ name: 'order', params: { type: 'processing' } })
+        }
+      }
+      if (context.app.$auth.user.restaurant_id !== nuxtState.data[0].entity.restaurant_id) {
+        return () => {
+          return redirect({ name: 'order', params: { type: 'processing' } })
+        }
+      }
+
+      // if order's restaurant == manager's restaurant
+      return true
+    }
+    return () => {
+      return context.redirect({ name: 'order', params: { type: 'processing' } })
+    }
+  },
+  getRedirectCallback (context) {
+    if (context.route.name !== 'order-type') {
+      return () => {
+        context.redirect({ name: 'order-type', params: { type: 'processing' } })
+      }
+    }
+    return null
+  },
+
   titles: {
     entity: 'Заказ',
     entities: 'Заказы'
@@ -13,6 +58,11 @@ const order = {
   apiPath: '/order',
   getResourceEndpoint (id) {
     return `${this.apiPath}/${id}`
+  },
+  endpointRequestConfig: {
+    params: {
+      restaurant: '{{ auth.user.restaurant_id }}'
+    }
   },
   enumerations: {
     orderStatus: [
@@ -65,12 +115,12 @@ const order = {
         ]
       }
     },
-    {
-      text: 'Ресторан',
-      value: 'restaurant.name',
-      type: 'relation',
-      relation: { entity: 'restaurant', key: 'restaurant.id' }
-    },
+    // {
+    //   text: 'Ресторан',
+    //   value: 'restaurant.name',
+    //   type: 'relation',
+    //   relation: { entity: 'restaurant', key: 'restaurant.id' }
+    // },
     {
       text: 'Курьер',
       value: 'courier.first_name',
@@ -100,6 +150,9 @@ const order = {
       }
     },
     restaurant_id: {
+      default: '{{ auth.user.restaurant_id }}',
+      disabled: true,
+      visible: false,
       label: 'Ресторан',
       fieldType: 'relation',
       relation: {

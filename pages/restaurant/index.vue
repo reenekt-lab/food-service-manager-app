@@ -4,20 +4,9 @@
       <v-col :cols="12">
         <v-btn
           class="my-2"
-          color="primary"
-          outlined
-          :to="{name: 'entity', params: { 'entity': entityName }}"
-          nuxt
-          exact
-        >
-          Назад
-        </v-btn>
-        <v-btn
-          v-if="canEditEntityFunction($auth.user, entity)"
-          class="my-2"
           color="secondary"
           outlined
-          :to="{name: 'entity-id-edit', params: { 'entity': entityName, id: entity.id }}"
+          :to="{ name: 'restaurant-edit' }"
           nuxt
           exact
         >
@@ -109,33 +98,34 @@
 </template>
 
 <script>
-import DynamicTable from '../../../components/DynamicTable/DynamicTable'
-import relatedResourcesDataLoaderMixin from '../../../mixins/relatedResourcesDataLoaderMixin'
-import entityAccessMixin from '../../../mixins/entityAccessMixin'
+import DynamicTable from '../../components/DynamicTable/DynamicTable'
+import relatedResourcesDataLoaderMixin from '../../mixins/relatedResourcesDataLoaderMixin'
 const lodashGet = require('lodash.get')
 
 export default {
   components: {
     DynamicTable
   },
-  mixins: [relatedResourcesDataLoaderMixin, entityAccessMixin],
-
-  middleware: ['data-schema-access-single-record'],
-
+  mixins: [relatedResourcesDataLoaderMixin],
   async asyncData ({ app, error, $axios, params }) {
-    const resourceData = await app.$dataSchema.loadResource(params.entity)
+    const entityLoadData = {
+      name: 'restaurant',
+      id: app.$auth.user.restaurant_id
+    }
+
+    const resourceData = await app.$dataSchema.loadResource(entityLoadData.name)
     if (!resourceData) {
       error({ statusCode: 404, message: 'Entity not found' })
       return
     }
     // todo move next line to doc page/file
     // details: https://axios.nuxtjs.org/usage.html#shortcuts
-    const data = await $axios.$get(resourceData.getResourceEndpoint(params.id))
+    const data = await $axios.$get(resourceData.getResourceEndpoint(entityLoadData.id))
 
     const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
 
     return {
-      entityName: params.entity,
+      entityName: entityLoadData.name,
       entity: data.data,
       fields: resourceData.headers,
       resourceData,

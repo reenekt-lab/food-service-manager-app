@@ -6,6 +6,22 @@ const restaurantManager = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+
+  accessAbility (context) {
+    if (process.client) {
+      const { nuxtState, route, redirect } = context
+      if (route.name !== 'restaurant-manager') {
+        return () => {
+          return redirect({ name: 'restaurant-manager' })
+        }
+      }
+      return context.app.$auth.user.id === nuxtState.data[0].entity.id
+    }
+    return () => {
+      context.redirect({ name: 'restaurant-manager' })
+    }
+  },
+
   titles: {
     entity: 'Менеджер ресторана',
     entities: 'Менеджеры ресторанов'
@@ -22,7 +38,7 @@ const restaurantManager = {
     { text: 'Телефон', value: 'phone_number' },
     { text: 'E-mail', value: 'email' },
     // { text: 'Название', value: 'is_admin' }, // todo maybe
-    { text: 'Ресторан', value: 'restaurant.name', type: 'relation', relation: { entity: 'restaurant', key: 'restaurant.id' } },
+    // { text: 'Ресторан', value: 'restaurant.name', type: 'relation', relation: { entity: 'restaurant', key: 'restaurant.id' } },
     { text: 'Добавлен', value: 'created_at' },
     { text: 'Изменен', value: 'updated_at' }
     // { text: 'Главное изображение', value: 'main_image', type: 'image' } // todo maybe
@@ -80,6 +96,9 @@ const restaurantManager = {
       }
     },
     restaurant_id: {
+      default: '{{ auth.user.restaurant_id }}',
+      disabled: true,
+      visible: false,
       label: 'Ресторан',
       fieldType: 'relation',
       relation: {

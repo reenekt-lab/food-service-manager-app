@@ -2,6 +2,8 @@
  * Related Resource Data Loader mixin provides methods for loading (data schema driven) resources' data from backend
  * Used in pages components
  * All data will be put into `relatedResourcesData` property
+ * NOTE: to disable loading all related resources on created() define
+ *       component's property 'loadRelatedResourcesOnCreate' with value false
  */
 export default {
   data () {
@@ -10,7 +12,9 @@ export default {
     }
   },
   created () {
-    this.loadAllRelatedResourcesData()
+    if (this.$options.loadRelatedResourcesOnCreate === undefined || this.$options.loadRelatedResourcesOnCreate !== false) {
+      this.loadAllRelatedResourcesData()
+    }
   },
   methods: {
     loadAllRelatedResourcesData () {
@@ -20,7 +24,7 @@ export default {
         }
       }
     },
-    loadRelatedResourceData (relatedResource, resourceKey) {
+    loadRelatedResourceData (relatedResource, resourceKey, extra = {}) {
       // prepare relatedResourcesData
       if (!this.relatedResourcesData[resourceKey]) {
         const relatedResourcesDataTemp = this.relatedResourcesData
@@ -52,6 +56,16 @@ export default {
                   axiosConfig.params[conditionKey] = this.entity[conditionValue]
                 }
               }
+            }
+          }
+        }
+      }
+
+      if (extra.axiosConfig) {
+        if (extra.axiosConfig.params) {
+          for (const key in extra.axiosConfig.params) {
+            if (Object.prototype.hasOwnProperty.call(extra.axiosConfig.params, key)) {
+              axiosConfig.params[key] = extra.axiosConfig.params[key]
             }
           }
         }

@@ -1,6 +1,6 @@
-# food-service-admin
+# food-service-restaurant-manager
 
-> Application for food service administrators
+> Application for restaurant managers
 
 ## Build Setup
 

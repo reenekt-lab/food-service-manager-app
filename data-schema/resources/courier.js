@@ -6,6 +6,27 @@ const courier = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+
+  // Middleware abilities
+  createAbility: true,
+  editAbility (context) {
+    if (process.client) {
+      const { nuxtState } = context
+      return context.app.$auth.user.restaurant_id === nuxtState.data[0].entity.restaurant_id
+    }
+    return false
+  },
+  // Page abilities
+  canCreate (user) {
+    return true
+  },
+  canEdit (user, entity) {
+    return user.restaurant_id === entity.restaurant_id
+  },
+  canDelete (user, entity) {
+    return user.restaurant_id === entity.restaurant_id
+  },
+
   titles: {
     entity: 'Курьер',
     entities: 'Курьеры'
@@ -13,6 +34,12 @@ const courier = {
   apiPath: '/courier',
   getResourceEndpoint (id) {
     return `${this.apiPath}/${id}`
+  },
+  endpointRequestConfig: {
+    params: {
+      restaurant: '{{ auth.user.restaurant_id }}',
+      include_free_couriers: true
+    }
   },
   headers: [
     { text: 'ID', value: 'id' },
@@ -80,6 +107,9 @@ const courier = {
       }
     },
     restaurant_id: {
+      default: '{{ auth.user.restaurant_id }}',
+      disabled: true,
+      visible: false,
       label: 'Ресторан',
       fieldType: 'relation',
       relation: {

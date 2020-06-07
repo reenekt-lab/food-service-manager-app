@@ -41,8 +41,10 @@
                 <!-- eslint-disable-next-line -->
                 <v-text-field
                   v-if="field.fieldType === 'input' || field.fieldType === 'decimal'"
+                  v-show="field.visible !== false || field.visible === undefined"
                   :key="`field_${index}`"
                   v-model="entity[key]"
+                  :disabled="field.disabled === true"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
                   :counter="0"
                   :label="field.label"
@@ -85,8 +87,10 @@
                 <!-- eslint-disable-next-line -->
                 <v-textarea
                   v-if="field.fieldType === 'textarea'"
+                  v-show="field.visible !== false || field.visible === undefined"
                   :key="`field_${index}`"
                   v-model="entity[key]"
+                  :disabled="field.disabled === true"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
                   :counter="0"
                   :label="field.label"
@@ -107,8 +111,10 @@
                 <!-- eslint-disable-next-line -->
                 <v-select
                   v-if="field.fieldType === 'relation'"
+                  v-show="field.visible !== false || field.visible === undefined"
                   :key="`field_${index}`"
                   v-model="entity[key]"
+                  :disabled="field.disabled === true"
                   :multiple="field.multiple || false"
                   :chips="field.chips || !!field.multiple"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
@@ -139,8 +145,10 @@
                 <!-- eslint-disable-next-line -->
                 <v-select
                   v-if="field.fieldType === 'enumeration'"
+                  v-show="field.visible !== false || field.visible === undefined"
                   :key="`field_${index}`"
                   v-model="entity[key]"
+                  :disabled="field.disabled === true"
                   :multiple="field.multiple || false"
                   :chips="field.chips || !!field.multiple"
                   :error="$v.entity[key].$dirty && $v.entity[key].$error"
@@ -176,8 +184,15 @@ export default {
   },
   mixins: [validationMixin, entityWatchersMixin, relatedResourcesDataLoaderMixin],
 
+  middleware: ['data-schema-access-create'],
+
   async asyncData ({ app, error, params }) {
     const resourceData = await app.$dataSchema.loadResource(params.entity)
+
+    app.$dataSchema.globalContext.auth = {
+      user: Object.assign({}, app.$auth.user)
+    }
+
     if (!resourceData) {
       error({ statusCode: 404, message: 'Entity not found' })
       return
@@ -188,7 +203,11 @@ export default {
     const keys = Object.keys(resourceData.editableFields)
     for (const key of keys) {
       if (resourceData.editableFields[key].default !== undefined) {
-        entity[key] = resourceData.editableFields[key].default
+        let value = app.$dataSchema.globalContextCompileString`${resourceData.editableFields[key].default}`
+        if (!isNaN(value)) {
+          value = +value
+        }
+        entity[key] = value
         continue
       }
 
@@ -210,12 +229,20 @@ export default {
 
     const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
 
+    let validations = resourceData.validations
+    const validationContext = {
+      pageType: 'create'
+    }
+    if (typeof resourceData.validations === 'function') {
+      validations = resourceData.validations(validationContext)
+    }
+
     return {
       entityName: params.entity,
       apiEndpoint,
       entity,
       editableFields: resourceData.editableFields,
-      validations: resourceData.validations,
+      validations,
       resourceData,
       relatedResources,
       title: resourceData.titles.entity
@@ -276,6 +303,19 @@ export default {
 
       return formData
     }
+  },
+  created () {
+    // fixes client-side global context
+    this.$dataSchema.globalContext.auth = {
+      user: Object.assign({}, this.$auth.user)
+    }
+
+    // reload resourceData (fixes methods load, earlier they was loaded as string)
+    this.$dataSchema.loadResource(this.$route.params.entity)
+      .then((resourceData) => {
+        this.resourceData = resourceData
+        this.validations = resourceData.validations
+      })
   },
   // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
   validations () {

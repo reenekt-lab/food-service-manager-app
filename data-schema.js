@@ -32,28 +32,50 @@ const drawerMenuItems = [
       to: '/'
     },
     {
+      group: true,
       icon: 'mdi-store-outline',
       title: 'Заказы',
-      to: { name: 'entity', params: { entity: 'order' } }
+      items: [
+        {
+          icon: 'mdi-clipboard-plus-outline',
+          title: 'Новые заказы',
+          to: { name: 'order-type', params: { type: 'new' } }
+        },
+        {
+          icon: 'mdi-clipboard-text-multiple-outline',
+          title: 'Заказы в работе',
+          to: { name: 'order-type', params: { type: 'processing' } }
+        },
+        {
+          icon: 'mdi-truck-delivery-outline',
+          title: 'В доставке', // "Заказы в доставке" не умещается
+          to: { name: 'order-type', params: { type: 'delivering' } }
+        }
+      ]
     }
   ],
   [
     {
       icon: 'mdi-table-chair',
-      title: 'Рестораны',
-      to: { name: 'entity', params: { entity: 'restaurant' } }
+      title: 'Мой ресторан',
+      to: { name: 'restaurant' }
     },
-    {
-      icon: 'mdi-silverware',
-      title: 'Категории ресторанов',
-      to: { name: 'entity', params: { entity: 'common-category' } }
-    }
-  ],
-  [
     {
       icon: 'mdi-silverware-fork-knife',
       title: 'Еда / напитки',
       to: { name: 'entity', params: { entity: 'food' } }
+    },
+    {
+      icon: 'mdi-account-circle',
+      title: 'Профиль',
+      to: { name: 'restaurant-manager' }
+    }
+  ],
+  [
+    {
+      icon: 'mdi-silverware',
+      title: 'Категории ресторанов',
+      to: { name: 'entity', params: { entity: 'common-category' } }
     },
     {
       icon: 'mdi-silverware-fork-knife',
@@ -67,11 +89,6 @@ const drawerMenuItems = [
     }
   ],
   [
-    {
-      icon: 'mdi-account-circle',
-      title: 'Менеджеры ресторанов',
-      to: { name: 'entity', params: { entity: 'restaurant-manager' } }
-    },
     {
       icon: 'mdi-account-circle',
       title: 'Курьеры',

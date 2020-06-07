@@ -6,6 +6,23 @@ const customer = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+
+  // Middleware abilities
+  createAbility: false,
+  editAbility (context) {
+    return false
+  },
+  // Page abilities
+  canCreate (user) {
+    return false
+  },
+  canEdit (user, entity) {
+    return false
+  },
+  canDelete (user, entity) {
+    return false
+  },
+
   titles: {
     entity: 'Клиент',
     entities: 'Клиенты'

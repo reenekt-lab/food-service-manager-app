@@ -1,7 +1,7 @@
 {
-  "name": "food-service-admin",
+  "name": "food-service-restaurant-manager",
   "version": "1.0.0",
-  "description": "Application for food service administrators",
+  "description": "Application for restaurant managers",
   "author": "Andrew Sementsov",
   "private": true,
   "scripts": {

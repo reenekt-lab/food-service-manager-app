@@ -4,37 +4,44 @@
       v-model="snackbar.active"
       top
       multi-line
+      vertical
       :color="snackbar.color"
     >
-      {{ snackbar.text }}
-      <v-btn
-        dark
-        text
-        @click="snackbar.active = false"
-      >
-        Закрыть
-      </v-btn>
+      <div class="text-center">
+        {{ snackbar.text }}
+      </div>
+      <div class="d-flex justify-space-between">
+        <v-btn
+          v-if="snackbar.item && snackbar.item.id"
+          dark
+          small
+          text
+          nuxt
+          :to="{ name: 'order-view-id', params: { id: snackbar.item.id } }"
+        >
+          К заказу
+        </v-btn>
+        <v-btn
+          dark
+          small
+          text
+          style="margin-left: auto;"
+          @click="snackbar.active = false"
+        >
+          Закрыть
+        </v-btn>
+      </div>
     </v-snackbar>
 
     <v-row>
       <v-col :cols="12">
-        <v-btn
-          v-if="canCreateEntityFunction($auth.user)"
-          class="my-2"
-          color="success"
-          outlined
-          :to="{name: 'entity-create', params: { 'entity': entityName }}"
-          nuxt
-          exact
-        >
-          Создать
-        </v-btn>
-
         <v-data-table
           :loading="loading"
           :server-items-length="entities.meta.total"
           :headers="tableHeaders"
           :items="entities.data"
+          :show-expand="$route.params.type === 'new' || $route.params.type === 'processing'"
+          single-expand
           :items-per-page="15"
           disable-filtering
           disable-sort
@@ -57,15 +64,8 @@
           <template #item.actions="{ item }">
             <!-- Desktop -->
             <v-flex v-if="$vuetify.breakpoint.mdAndUp">
-              <v-btn color="primary" small :to="{ name: 'entity-id', params: { id: item.id } }" nuxt>
+              <v-btn color="primary" small :to="{ name: 'order-view-id', params: { id: item.id } }" nuxt>
                 <v-icon>mdi-eye</v-icon>
-              </v-btn>
-              <v-btn v-if="canEditEntityFunction($auth.user, item)" color="secondary" small :to="{ name: 'entity-id-edit', params: { id: item.id } }" nuxt>
-                <v-icon>mdi-square-edit-outline</v-icon>
-              </v-btn>
-              <!-- todo this -->
-              <v-btn v-if="canDeleteEntityFunction($auth.user, item)" color="error" small @click="deleteEntity(item.id)">
-                <v-icon>mdi-delete-outline</v-icon>
               </v-btn>
             </v-flex>
 
@@ -84,35 +84,87 @@
               <v-list class="text-center">
                 <v-list-item
                   color="primary"
-                  :to="{ name: 'entity-id', params: { id: item.id } }"
+                  :to="{ name: 'order-view-id', params: { id: item.id } }"
                   nuxt
                 >
                   <v-list-item-title>
                     <v-icon>mdi-eye</v-icon>
                   </v-list-item-title>
                 </v-list-item>
-                <v-list-item
-                  v-if="canEditEntityFunction($auth.user, item)"
-                  color="secondary"
-                  :to="{ name: 'entity-id-edit', params: { id: item.id } }"
-                  nuxt
-                >
-                  <v-list-item-title>
-                    <v-icon>mdi-square-edit-outline</v-icon>
-                  </v-list-item-title>
-                </v-list-item>
-                <!-- TODO below -->
-                <v-list-item
-                  v-if="canDeleteEntityFunction($auth.user, item)"
-                  color="error"
-                  @click="deleteEntity(item.id)"
-                >
-                  <v-list-item-title>
-                    <v-icon>mdi-delete-outline</v-icon>
-                  </v-list-item-title>
-                </v-list-item>
               </v-list>
             </v-menu>
+          </template>
+
+          <template
+            v-if="$route.params.type === 'new' || $route.params.type === 'processing'"
+            #expanded-item="{ headers, item }"
+          >
+            <td :colspan="headers.length">
+              <div v-if="$route.params.type === 'new'">
+                <v-btn
+                  color="primary"
+                  :loading="orderProcessing"
+                  @click="acceptOrder(item)"
+                >
+                  Взять в работу
+                </v-btn>
+              </div>
+              <div v-if="$route.params.type === 'processing'">
+                <div class="d-flex justify-center align-center flex-wrap">
+                  <v-row>
+                    <v-col
+                      cols="12"
+                      md="10"
+                      :offset-md="1"
+                    >
+                      <v-select
+                        v-model="selectedCourierToDeliver"
+                        :items="relatedResourcesData.courier.data"
+                        :loading="relatedResourcesData.courier.loading"
+                        placeholder="Выберите курьера"
+                        item-text="first_name"
+                        item-value="id"
+                        hide-details
+                      />
+                    </v-col>
+                    <v-col
+                      cols="12"
+                      md="10"
+                      :offset-md="1"
+                      class="d-flex justify-center"
+                    >
+                      <v-btn
+                        color="primary"
+                        :disabled="!selectedCourierToDeliver"
+                        :loading="orderProcessing"
+                        @click="transferToDelivery(item, selectedCourierToDeliver)"
+                      >
+                        Передать курьеру
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+
+                  <div v-if="false" class="d-flex align-center my-6" style="width: 100%;">
+                    <v-divider style="margin-right: 1.5rem;" />
+                    <span>Или</span>
+                    <v-divider style="margin-left: 1.5rem;" />
+                  </div>
+
+                  <v-row v-if="false">
+                    <v-col
+                      cols="12"
+                      md="10"
+                      :offset-md="1"
+                    >
+                      <v-select
+                        :items="[]"
+                        placeholder="TODO: добавить кнопку для поиска свободного курьера для доставки"
+                      />
+                    </v-col>
+                  </v-row>
+                </div>
+              </div>
+            </td>
           </template>
         </v-data-table>
       </v-col>
@@ -121,14 +173,21 @@
 </template>
 
 <script>
-import entityAccessMixin from '../../mixins/entityAccessMixin'
+import entityAccessMixin from '../../../mixins/entityAccessMixin'
+import relatedResourcesDataLoaderMixin from '../../../mixins/relatedResourcesDataLoaderMixin'
+import orderCommonMixin from '../../../mixins/orders/orderCommonMixin'
 const lodashGet = require('lodash.get')
 
 export default {
-  mixins: [entityAccessMixin],
+  mixins: [entityAccessMixin, relatedResourcesDataLoaderMixin, orderCommonMixin],
 
   async asyncData ({ app, error, params }) {
-    const resourceData = await app.$dataSchema.loadResource(params.entity)
+    const entityLoadData = {
+      name: 'order',
+      restaurant_id: app.$auth.user.restaurant_id
+    }
+
+    const resourceData = await app.$dataSchema.loadResource(entityLoadData.name)
 
     app.$dataSchema.globalContext.auth = {
       user: Object.assign({}, app.$auth.user)
@@ -138,14 +197,19 @@ export default {
       error({ statusCode: 404, message: 'Entity not found' })
       return
     }
+
+    const relatedResources = await app.$dataSchema.loadRelatedResources(resourceData)
+
     return {
       title: resourceData.titles.entities,
       apiEndpoint: resourceData.apiPath,
-      entityName: params.entity,
+      entityName: entityLoadData.name,
       headers: resourceData.headers,
-      resourceData
+      resourceData,
+      relatedResources
     }
   },
+  loadRelatedResourcesOnCreate: false,
   data () {
     return {
       tableHeaders: [],
@@ -161,7 +225,8 @@ export default {
       snackbar: {
         active: false,
         color: 'info',
-        text: ''
+        text: '',
+        item: null
       }
     }
   },
@@ -170,13 +235,22 @@ export default {
     this.$dataSchema.globalContext.auth = {
       user: Object.assign({}, this.$auth.user)
     }
+
+    const extraResourceData = {
+      axiosConfig: {
+        params: {
+          restaurant: this.$auth.user.restaurant_id
+        }
+      }
+    }
+    this.loadRelatedResourceData(this.relatedResources.courier, 'courier', extraResourceData)
   },
   mounted () {
     this.updateHeaders()
     this.loadPageData()
 
     // reload resourceData (fixes methods load, earlier they was loaded as string)
-    this.$dataSchema.loadResource(this.$route.params.entity)
+    this.$dataSchema.loadResource(this.entityName)
       .then((resourceData) => {
         this.resourceData = resourceData
       })
@@ -189,6 +263,14 @@ export default {
       })
       if (!actionFieldExists) {
         headers.push({ text: 'Действия', value: 'actions' })
+      }
+      if (this.$route.params.type === 'new' || this.$route.params.type === 'processing') {
+        const expandFieldExists = headers.find((elem) => {
+          return elem.value === 'data-table-expand'
+        })
+        if (!expandFieldExists) {
+          headers.push({ text: '', value: 'data-table-expand' })
+        }
       }
 
       // headers.filter((header) => {
@@ -233,7 +315,17 @@ export default {
         }
       }
 
-      this.$axios.get(this.apiEndpoint, axiosConfig)
+      if (this.$route.params.type === 'new') {
+        axiosConfig.params.status = 'created' // backend's status
+      }
+      if (this.$route.params.type === 'processing') {
+        axiosConfig.params.status = 'cooking' // backend's status
+      }
+      if (this.$route.params.type === 'delivering') {
+        axiosConfig.params.status = 'delivering' // backend's status
+      }
+
+      return this.$axios.get(this.apiEndpoint, axiosConfig)
         .then((response) => {
           this.entities = response.data
         })
@@ -247,6 +339,10 @@ export default {
         })
     },
 
+    /**
+     * @deprecated
+     * @param id
+     */
     deleteEntity (id) {
       this.$axios.delete(this.resourceData.getResourceEndpoint(id))
         .then((response) => {

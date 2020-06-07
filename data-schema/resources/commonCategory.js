@@ -6,6 +6,23 @@ const commonCategory = {
   //   icon: 'mdi-table-chair',
   //   title: 'Рестораны'
   // },
+
+  // Middleware abilities
+  createAbility: false,
+  editAbility (context) {
+    return false
+  },
+  // Page abilities
+  canCreate (user) {
+    return false
+  },
+  canEdit (user, entity) {
+    return false
+  },
+  canDelete (user, entity) {
+    return false
+  },
+
   titles: {
     entity: 'Общая категория ресторана',
     entities: 'Общие категории ресторана'

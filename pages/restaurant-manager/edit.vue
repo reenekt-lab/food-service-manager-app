@@ -7,7 +7,7 @@
           class="my-2"
           color="primary"
           outlined
-          :to="{name: 'entity', params: { 'entity': entityName }}"
+          :to="{ name: 'restaurant-manager' }"
           nuxt
           exact
         >
@@ -31,7 +31,7 @@
         </v-snackbar>
 
         <v-card>
-          <v-card-title>Редактирование "{{ entity ? (entity.name ? entity.name : `${resourceData.titles.entity} #${entity.id}`) : (entityName ? entityName : 'ресурса') }}"</v-card-title>
+          <v-card-title>Редактирование профиля</v-card-title>
           <v-card-text>
             <!-- TODO модификаторы вроде outlined для всех полей в форме (пример - https://vuetifyjs.com/en/components/textarea/#textareas) -->
             <form>
@@ -172,10 +172,10 @@
 <script>
 import { validationMixin } from 'vuelidate'
 import { objectToFormData } from 'object-to-formdata'
-import VImagePreviewInput from '../../../components/VImagePreviewInput'
-import DynamicTable from '../../../components/DynamicTable/DynamicTable'
-import entityWatchersMixin from '../../../mixins/entityWatchersMixin'
-import relatedResourcesDataLoaderMixin from '../../../mixins/relatedResourcesDataLoaderMixin'
+import VImagePreviewInput from '../../components/VImagePreviewInput'
+import DynamicTable from '../../components/DynamicTable/DynamicTable'
+import entityWatchersMixin from '../../mixins/entityWatchersMixin'
+import relatedResourcesDataLoaderMixin from '../../mixins/relatedResourcesDataLoaderMixin'
 
 // const objectFilterWithKey = (obj, predicate) =>
 //   Object.keys(obj)
@@ -196,12 +196,17 @@ export default {
   middleware: ['data-schema-access-edit'],
 
   async asyncData ({ app, error, $axios, params }) {
-    const resourceData = await app.$dataSchema.loadResource(params.entity)
+    const entityLoadData = {
+      name: 'restaurant-manager',
+      id: app.$auth.user.id
+    }
+
+    const resourceData = await app.$dataSchema.loadResource(entityLoadData.name)
     if (!resourceData) {
       error({ statusCode: 404, message: 'Entity not found' })
       return
     }
-    const apiEndpoint = resourceData.getResourceEndpoint(params.id)
+    const apiEndpoint = resourceData.getResourceEndpoint(entityLoadData.id)
     const data = await $axios.$get(apiEndpoint)
     const entity = data.data
     const keys = Object.keys(resourceData.editableFields)
@@ -240,12 +245,20 @@ export default {
       }
     }
 
+    let validations = resourceData.validations
+    const validationContext = {
+      pageType: 'create'
+    }
+    if (typeof resourceData.validations === 'function') {
+      validations = resourceData.validations(validationContext)
+    }
+
     return {
-      entityName: params.entity,
+      entityName: entityLoadData.name,
       apiEndpoint,
       entity,
       editableFields: resourceData.editableFields,
-      validations: resourceData.validations,
+      validations,
       resourceData,
       relatedResources
     }
@@ -324,6 +337,19 @@ export default {
       }
       return res
     }
+  },
+  mounted () {
+    // fixes client-side global context
+    this.$dataSchema.globalContext.auth = {
+      user: Object.assign({}, this.$auth.user)
+    }
+
+    // reload resourceData (fixes methods load, earlier they was loaded as string)
+    this.$dataSchema.loadResource('restaurant-manager')
+      .then((resourceData) => {
+        this.resourceData = resourceData
+        this.validations = resourceData.validations
+      })
   },
   // dynamic validation's schema. see details here https://vuelidate.js.org/#sub-dynamic-validation-schema
   validations () {

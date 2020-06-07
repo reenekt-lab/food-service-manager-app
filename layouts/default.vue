@@ -23,21 +23,60 @@
 
         <v-list>
           <template v-for="(group, gi) in items">
-            <v-list-item
+            <template
               v-for="(item, i) in group"
-              :key="`group_${gi}_item_${i}`"
-              :to="item.to"
-              nuxt
-              router
-              exact
             >
-              <v-list-item-action>
-                <v-icon>{{ item.icon }}</v-icon>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
-              </v-list-item-content>
-            </v-list-item>
+              <v-list-item
+                v-if="!item.group"
+                :key="`group_${gi}_item_${i}`"
+                :to="item.to"
+                nuxt
+                router
+                exact
+              >
+                <v-list-item-action>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </v-list-item-action>
+                <v-list-item-content>
+                  <v-list-item-title v-text="item.title" />
+                </v-list-item-content>
+              </v-list-item>
+
+              <v-list-group
+                v-if="item.group"
+                :key="`group_${gi}_item_${i}`"
+                :prepend-icon="item.icon"
+                :color="null"
+                :value="isAnyChildrenRouteActive(item)"
+                no-action
+              >
+                <template v-slot:activator>
+                  <v-list-item-content>
+                    <v-list-item-title>{{ item.title }}</v-list-item-title>
+                  </v-list-item-content>
+                </template>
+
+                <v-list-item
+                  v-for="(subItem, si) in item.items"
+                  :key="`group_${gi}_subgroup_${i}_item${si}`"
+                  :to="subItem.to"
+                  nuxt
+                  router
+                  exact
+                >
+<!--                  <v-list-item-icon>-->
+<!--                    <v-icon v-text="subItem.icon" />-->
+<!--                  </v-list-item-icon>-->
+                  <v-list-item-content>
+                    <v-list-item-title v-text="subItem.title" />
+                  </v-list-item-content>
+                  <v-list-item-icon>
+                    <v-icon v-text="subItem.icon" />
+                  </v-list-item-icon>
+                </v-list-item>
+              </v-list-group>
+
+            </template>
             <v-divider v-if="gi < (items.length - 1)" :key="`divider_${gi}`" />
           </template>
         </v-list>
@@ -198,6 +237,14 @@ export default {
     },
     hidePwaPromptCardCard () {
       this.showPwaPromptCard = false
+    },
+    isAnyChildrenRouteActive (group) {
+      for (const item of group.items) {
+        if (item.to && item.to.name) {
+          return this.$route.name === item.to.name
+        }
+      }
+      return false
     }
   }
 }
