@@ -35,8 +35,8 @@ const foodTag = {
     { text: 'ID', value: 'id' },
     { text: 'Название', value: 'name' },
     { text: 'Описание', value: 'description' },
-    { text: 'Добавлен', value: 'created_at' },
-    { text: 'Изменен', value: 'updated_at' }
+    { text: 'Добавлен', value: 'created_at', type: 'datetime' },
+    { text: 'Изменен', value: 'updated_at', type: 'datetime' }
     // { text: 'Главное изображение', value: 'main_image', type: 'image' }
   ],
   editableFields: {

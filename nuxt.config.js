@@ -32,7 +32,9 @@ export default {
   ** Global CSS
   */
   css: [
-    '~/assets/page-transition.css'
+    '~/assets/page-transition.css',
+    '~/assets/fonts.css',
+    '@mdi/font/css/materialdesignicons.css'
   ],
   /*
   ** Plugins to load before mounting the App
@@ -48,7 +50,9 @@ export default {
   buildModules: [
     // Doc: https://github.com/nuxt-community/eslint-module
     '@nuxtjs/eslint-module',
-    '@nuxtjs/vuetify'
+    '@nuxtjs/vuetify',
+    // Doc: https://github.com/nuxt-community/moment-module
+    '@nuxtjs/moment'
   ],
   /*
   ** Nuxt.js modules
@@ -118,7 +122,13 @@ export default {
   ** https://github.com/nuxt-community/vuetify-module
   */
   vuetify: {
+    defaultAssets: false,
     optionsPath: './vuetify.options.js'
+  },
+
+  moment: {
+    defaultLocale: 'ru',
+    locales: ['ru']
   },
   /*
   ** Build configuration
