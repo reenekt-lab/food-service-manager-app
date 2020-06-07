@@ -22,8 +22,8 @@ const customer = {
     { text: 'Телефон', value: 'phone_number' },
     { text: 'E-mail', value: 'email' },
     // { text: 'Название', value: 'is_admin' }, // todo maybe
-    { text: 'Добавлен', value: 'created_at' },
-    { text: 'Изменен', value: 'updated_at' }
+    { text: 'Добавлен', value: 'created_at', type: 'datetime' },
+    { text: 'Изменен', value: 'updated_at', type: 'datetime' }
     // { text: 'Главное изображение', value: 'main_image', type: 'image' } // todo maybe
   ],
   editableFields: {

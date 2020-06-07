@@ -53,6 +53,12 @@
             <!-- eslint-enable -->
           </template>
 
+          <template v-for="(thdVal, thdKey, thdIndex) in tableHeadersDates" v-slot:[thdKey]="{ item }">
+            <div :key="`qwe_${thdIndex}`">
+              {{ $moment.utc(item[thdVal]).format('D MMM YYYY H:mm:ss') }}
+            </div>
+          </template>
+
           <template #item.actions="{ item }">
             <!-- Desktop -->
             <v-flex v-if="$vuetify.breakpoint.mdAndUp">
@@ -139,6 +145,7 @@ export default {
     return {
       tableHeaders: [],
       tableHeadersRelations: {},
+      tableHeadersDates: {},
       loading: true,
       currentPage: 1,
       entities: {
@@ -183,6 +190,11 @@ export default {
         if (tableHeadersRelationsTemp[key].multiple !== true) {
           this.tableHeadersRelations[`item.${tableHeadersRelationsTemp[key].value}`] = tableHeadersRelationsTemp[key].relation
         }
+      }
+
+      const tableHeadersDates = headers.filter(header => header.type === 'datetime')
+      for (const datetimeHeader of tableHeadersDates) {
+        this.tableHeadersDates[`item.${datetimeHeader.value}`] = datetimeHeader.value
       }
 
       this.tableHeaders = tableHeaders

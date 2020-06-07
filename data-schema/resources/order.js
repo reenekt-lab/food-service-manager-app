@@ -83,8 +83,8 @@ const order = {
       type: 'enumeration',
       enumeration: 'orderStatus'
     },
-    { text: 'Добавлен', value: 'created_at' },
-    { text: 'Изменен', value: 'updated_at' }
+    { text: 'Добавлен', value: 'created_at', type: 'datetime' },
+    { text: 'Изменен', value: 'updated_at', type: 'datetime' }
   ],
   editableFields: {
     customer_id: {

@@ -19,8 +19,8 @@ const foodCategory = {
     { text: 'Название', value: 'name' },
     { text: 'Описание', value: 'description' },
     { text: 'Родительская категория', value: 'parent.name', type: 'relation', relation: { entity: 'food-category', key: 'parent.id' } },
-    { text: 'Добавлен', value: 'created_at' },
-    { text: 'Изменен', value: 'updated_at' }
+    { text: 'Добавлен', value: 'created_at', type: 'datetime' },
+    { text: 'Изменен', value: 'updated_at', type: 'datetime' }
     // { text: 'Главное изображение', value: 'main_image', type: 'image' }
   ],
   editableFields: {
