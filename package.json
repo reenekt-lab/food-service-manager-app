@@ -23,6 +23,7 @@
     "vuetify": "^2.2.20"
   },
   "devDependencies": {
+    "@mdi/font": "^5.3.45",
     "@nuxtjs/eslint-config": "^2.0.0",
     "@nuxtjs/eslint-module": "^1.0.0",
     "@nuxtjs/moment": "^1.6.1",
