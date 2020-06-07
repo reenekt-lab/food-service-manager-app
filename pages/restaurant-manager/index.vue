@@ -31,6 +31,9 @@
                   <td v-if="field.type === 'text' || field.type === undefined">
                     {{ entity[field.value] }}
                   </td>
+                  <td v-if="field.type === 'datetime'">
+                    {{ $moment.utc(entity[field.value]).format('D MMM YYYY H:mm:ss') }}
+                  </td>
                   <td v-if="field.type === 'relation' && field.multiple !== true">
                     <!-- eslint-disable -->
                     <v-btn v-if="lodashGet(entity, field.value)" text small

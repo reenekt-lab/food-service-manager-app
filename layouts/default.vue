@@ -217,7 +217,7 @@ export default {
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: process.env.APP_NAME || 'Food Service App',
+      title: process.env.APP_SHORT_NAME || process.env.APP_NAME || 'Food Service App',
       showPwaPromptCard: false
     }
   },
