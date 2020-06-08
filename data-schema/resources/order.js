@@ -79,6 +79,10 @@ const order = {
         value: 'cooking'
       },
       {
+        text: 'Приготовлен',
+        value: 'cooked'
+      },
+      {
         text: 'Доставляется',
         value: 'delivering'
       },
@@ -121,6 +125,7 @@ const order = {
     //   type: 'relation',
     //   relation: { entity: 'restaurant', key: 'restaurant.id' }
     // },
+    { text: 'Адрес', value: 'address' },
     {
       text: 'Курьер',
       value: 'courier.first_name',
@@ -209,6 +214,14 @@ const order = {
       },
       fieldParams: {}
     },
+    address: {
+      label: 'Адрес доставки',
+      fieldType: 'input',
+      fieldParams: {
+        required: true,
+        type: 'text'
+      }
+    },
     courier_id: {
       label: 'Курьер',
       fieldType: 'relation',
@@ -241,6 +254,9 @@ const order = {
     },
     content: {},
     restaurant_id: {
+      required
+    },
+    address: {
       required
     },
     courier_id: {},
