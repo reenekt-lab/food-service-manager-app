@@ -220,6 +220,10 @@ export default {
         entity[key] = []
         continue
       }
+      if (resourceData.editableFields[key].fieldType === 'relation' && resourceData.editableFields[key].multiple === true) {
+        entity[key] = []
+        continue
+      }
       if (resourceData.editableFields[key].confirmed === true) {
         const fieldKeyName = `${key}${resourceData.editableFields[key].confirmationSuffix || '_confirmation'}`
         entity[fieldKeyName] = undefined
