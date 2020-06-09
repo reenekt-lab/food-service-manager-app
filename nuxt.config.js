@@ -106,9 +106,9 @@ export default {
   */
   pwa: {
     manifest: {
-      name: 'Food Service Admin',
-      short_name: 'Food Service Admin',
-      description: 'Приложение для управления Food Service',
+      name: 'Управление рестораном',
+      short_name: 'Управление рестораном',
+      description: 'Приложение для управления рестораном Food Service',
       theme_color: colors.orange.darken1,
       lang: 'ru'
     }
