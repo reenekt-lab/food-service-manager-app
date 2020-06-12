@@ -35,6 +35,13 @@ const restaurant = {
     { text: 'Название', value: 'name' },
     { text: 'Описание', value: 'description' },
     { text: 'Адрес', value: 'address' },
+    {
+      text: 'Категории',
+      value: 'common_categories',
+      type: 'relation',
+      multiple: true,
+      relation: { entity: 'common-category', valueKey: 'id', textKey: 'name' }
+    },
     { text: 'Добавлен', value: 'created_at', type: 'datetime' },
     { text: 'Изменен', value: 'updated_at', type: 'datetime' },
     { text: 'Главное изображение', value: 'main_image', type: 'image' }
@@ -63,6 +70,18 @@ const restaurant = {
         type: 'text'
       }
     },
+    categories: {
+      label: 'Категории ресторана',
+      fieldType: 'relation',
+      multiple: true,
+      chips: true, // todo move somewhere out of here
+      relation: {
+        entity: 'common-category',
+        valueKey: 'id', // value of field
+        textKey: 'name' // displaying text's key
+      },
+      fieldParams: {}
+    },
     main_image: {
       label: 'Главное изображение',
       fieldType: 'image',
@@ -78,7 +97,8 @@ const restaurant = {
     },
     address: {
       required
-    }
+    },
+    categories: {}
   }
 }
 
