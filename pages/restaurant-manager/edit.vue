@@ -384,6 +384,7 @@ export default {
             this.snackbar.color = 'success'
             this.snackbar.active = true
             this.snackbar.text = response.data.message
+            this.$router.push({ name: 'restaurant-manager' })
           })
           .catch((error) => {
             // console.log(error.response.data) todo

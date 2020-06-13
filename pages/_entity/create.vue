@@ -354,6 +354,7 @@ export default {
             this.snackbar.color = 'success'
             this.snackbar.active = true
             this.snackbar.text = response.data.message
+            this.$router.push({ name: 'entity', params: { entity: this.entityName } }) // todo it better (add button to create-and-repeat)
           })
           .catch((error) => {
             // console.log(error.response.data) todo

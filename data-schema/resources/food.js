@@ -93,6 +93,9 @@ const food = {
       }
     },
     restaurant_id: {
+      default: '{{ auth.user.restaurant_id }}',
+      disabled: true,
+      visible: false,
       label: 'Ресторан',
       fieldType: 'relation',
       relation: {
