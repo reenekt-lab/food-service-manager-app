@@ -15,6 +15,9 @@ class PwaInstaller {
   // }
 
   constructor () {
+    // GLOBAL ACCESS (client only)
+    window.pwaInfo = this
+
     this.pwaInstalled = false
     this.pwaInstallEvent = null
     // catch and prevent default promotion in order to run it later (see promptInstall method)
